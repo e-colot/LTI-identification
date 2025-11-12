@@ -1,17 +1,18 @@
 clear; close all; clc;
 
-
+folderPath = '../excitations/';
+signalName = 'multiSine';
 
 %% RMS + band of interest determination
 
-desiredRMS = 1;
+desiredRMS = 0.1;
 N = 50e3;
 
 Npp = 2; % number of realizations
 
 totalSig = zeros(N, Npp);
 totalSel = [];
-maxExcBin = N/20; % maximum excited frequency bin
+maxExcBin = N/4; % maximum excited frequency bin
 
 for pp = 1:Npp
     if pp == 1
@@ -25,13 +26,14 @@ for pp = 1:Npp
     totalSel(:, pp) = sel;
 end
 
-save('multiSine_Sig_E0_S0.mat', "totalSig");
-save('multiSine_Sel_E0_S0.mat', "totalSel");
+save(strcat(folderPath, signalName, '_Sig_E0_S0.mat'), "totalSig");
+save(strcat(folderPath, signalName, '_Sel_E0_S0.mat'), "totalSel");
 
-disp('Signal saved to multiSine_Sig_E0_S0.mat');
+disp(strcat('Signal saved to', folderPath, signalName, '_Sig_E0_S0.mat'));
 disp(['With ' num2str(size(totalSig,1)) ' points and ' num2str(Npp) ' realizations.']);
 disp(' ');
-disp('Excited frequencies saved to multiSine_Sel_E0_S0.mat');
+disp('saved to multiSine_Sel_E0_S0.mat');
+disp(strcat('Excited frequencies saved to', folderPath, signalName, '_Sel_E0_S0.mat'));
 disp(['With ' num2str(size(totalSel,1)) ' excited frequencies.']);
 
 % DEBUG
