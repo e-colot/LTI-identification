@@ -6,9 +6,9 @@ signalName = 'multiSine';
 %% RMS + band of interest determination
 
 desiredRMS = 0.1;
-N = 50e3;
+N = 6e3;
 
-Npp = 2; % number of realizations
+Npp = 40; % number of realizations
 
 totalSig = zeros(N, Npp);
 totalSel = [];
