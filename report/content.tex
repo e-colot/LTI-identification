@@ -1,7 +1,12 @@
 \chapter{System description}
 
-\Huge \textbf{TODO}
-\normalsize
+The device studied throughout this project is a linear system with a static nonlinear feedback loop. It has a single input and a single output and the feedback is known to follow the input-output relation :
+\begin{equation}
+    y(t) = u^3(t)
+\end{equation}
+
+The objective will be to identify the linear part of the system and to have a measure of the nonlinearity and noise levels.
+
 
 
 
@@ -10,7 +15,7 @@
 
 Before making any useful measurement, the parameters of the excitation signal must be chosen to match to the DUT parameters.The rms of the applied signal must indeed be determined to use the full range of the ADC while avoiding saturation of the system. The poles of the system must also be roughly known to determine the band of interest, making sure that the system's dynamics are measured.
 
-The input signal is ann odd multisine with an rms of $1$ V and a power sweep is performed using the PXI measurement setup. This allows to determine a suited rms for the future excitation signals. By varying the sampling frequency in the measurement settings, the band of interest is also determined. 
+By applying a random phase multisine excitation signal with various amplitudes and sampling frequencies, a rough estimation of the FRF of the system has been obtained. This tuning procedure allowed to identify an amplitude to use for the excitation signal and a band of interest below $1.5kHz$, which led to the choice of a sampling frequency of $f_s = 5kHz$. 
 
 
 

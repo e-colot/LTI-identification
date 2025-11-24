@@ -14,6 +14,16 @@ periodN = size(totalSig, 1); % number of samples of the original period
 repNumber = N / periodN; % number of periods in the acquired signal
 
 %% Remove transient
+
+% transient visualization
+figure;
+subplot(211);
+plot(db(y(1:periodN, 1, 1) - y(periodN + 1:2*periodN, 1, 1)), "LineWidth", 2);
+title('y_{P1} - y_{P2}');
+xlabel('Samples');
+ylabel('Amplitude (dB)');
+grid on;
+
 transientPeriods = 1;
 assert(transientPeriods < repNumber, 'Transient periods to remove exceed total number of periods.');
 
@@ -23,177 +33,77 @@ y = y(transientPeriods*periodN + 1:end, :, :);
 N = size(u, 1);
 repNumber = repNumber - transientPeriods;
 
+%% --------------- FRF estimate ---------------
+%% Fast method
 
-%% Plot FFTs of input and output
-f = (0:N-1)*fs/N;
+[FRF_fast, N_exc, N_even, N_odd, N_noise] = fastMethod(u(:, 1, 1), y(:, 1, 1), totalSel, repNumber);
+indices = {N_exc, N_even, N_odd, N_noise};
+colors = {'k', 'g', 'r', 'b'};
+labels = {'Excited', 'Non-excited Even', 'Non-excited Odd', 'Noise'};
 
+f = (0:N-1)'*(fs/N);
 
-% Splitting the frequency bins into excited, non-excited even, non-excited odd and noise bins
-excitedFreq = (totalSel(:, 1)*repNumber + 1)';
-oddFreq = setdiff((1:2:N/repNumber)*repNumber + 1, excitedFreq);
-evenFreq = setdiff((0:2:(N-1)/repNumber)*repNumber + 1, excitedFreq);
-noiseFreq = setdiff(1:N, [excitedFreq, oddFreq, evenFreq]);
+figure; 
+for itr = 1:4
+    subplot(2, 2, itr);
+    plot(f(indices{itr}), db(abs(FRF_fast(indices{itr}))), 'o', 'Color', colors{itr}, 'LineWidth', 2); 
+    title(['Fast Method FRF Estimate - ' labels{itr}]);
+    xlabel('Frequency (Hz)');
+    ylabel('|FRF| (dB)');
+    xlim([1/fs fs/2]);
+    hold on;
+end
+
+%% Robust method
+
+G_2D = zeros(realizations, repNumber, periodN);
+G_1D = zeros(realizations, periodN);
+noiseVar_2D = zeros(realizations, periodN);
+
+% using a single power level
+powerLevel = 1;
+% for each realization
+for r = 1:realizations
+    % for each period
+    for p = 1:repNumber
+        u_per = u((p-1)*periodN + 1:p*periodN, r, powerLevel);
+        y_per = y((p-1)*periodN + 1:p*periodN, r, powerLevel);
+        
+        U = fft(u_per);
+        Y = fft(y_per);
+
+        G_2D(r, p, :) = Y ./ U;
+    end
+    G_1D(r, :) = squeeze(mean(G_2D(r, :, :), 2));
+    noiseVar_2D(r, :) = squeeze(var(G_2D(r, :, :), 0, 2)) / repNumber;
+end
+
+% sample mean
+G_ML = squeeze(mean(G_1D, 1));
+noise_var = mean(noiseVar_2D, 1);
+distortion_var = var(G_1D, 0, 1) / realizations;
+
+f = (0:periodN-1)'*(fs/periodN);
 
 figure;
+subplot(211);
+plot(f, db(G_ML), 'o', 'LineWidth', 2);
+title('Robust Method FRF Estimate');
+xlabel('Frequency (Hz)');
+ylabel('|FRF| (dB)');
+xlim([1/fs fs/2]);
+grid on;
 
-subplot(2,4,[1 2 5 6]);
-U1 = fft(u(:, 1, 1));
-plot(f(excitedFreq), db(U1(excitedFreq)), 'o', 'LineWidth', 2);
+subplot(212);
 hold on;
-otherFreq = [oddFreq, evenFreq, noiseFreq];
-plot(f(otherFreq), db(U1(otherFreq)), 'x', 'LineWidth', 2);
-title('Input signal FFT');
+plot(f, db(noise_var), 'r', 'LineWidth', 2);
+plot(f, db(distortion_var), 'b', 'LineWidth', 2);
+plot(f, db(noise_var + distortion_var), 'g', 'LineWidth', 2);
+title('Variance Estimates');
 xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-legend('Excited bins', 'Non-excited bins');
-xlim([1 fs/2]);
-limitYAxis = ylim;
+ylabel('Variance (dB)');
+xlim([1/fs fs/2]);
 grid on;
-
-subplot(2,4,3);
-Y1 = fft(y(:, 1, 1));
-plot(f(excitedFreq), db(Y1(excitedFreq)), 'o', 'Color', [0 0.4470 0.7410], 'LineWidth', 2);
-title('Output signal FFT, excited frequencies');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-xlim([1 fs/2]);
-ylim(limitYAxis);
-grid on;
-subplot(2,4,4);
-plot(f(oddFreq), db(Y1(oddFreq)), 'x', 'Color', [0.8500 0.3250 0.0980], 'LineWidth', 2);
-title('Output signal FFT, non-excited odd frequencies');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-xlim([1 fs/2]);
-ylim(limitYAxis);
-grid on;
-subplot(2,4,7);
-plot(f(evenFreq), db(Y1(evenFreq)), '*', 'Color', [0.9290 0.6940 0.1250], 'LineWidth', 2);
-title('Output signal FFT, non-excited even frequencies');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-xlim([1 fs/2]);
-ylim(limitYAxis);
-grid on;
-subplot(2,4,8);
-plot(f(noiseFreq), db(Y1(noiseFreq)), '.', 'Color', [0.4940 0.1840 0.5560], 'LineWidth', 2);
-title('Output signal FFT, noise frequencies');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-xlim([1 fs/2]);
-ylim(limitYAxis);
-grid on;
+legend('Noise Variance', 'Distortion Variance', 'Total Variance');
 
 
-%% FRF estimate
-
-H_est = zeros(N, realizations, power_levels);
-H_est_mean = zeros(N, power_levels);
-for p = 1:power_levels
-    for r = 1:realizations
-        U = fft(u(:, r, p));
-        Y = fft(y(:, r, p));
-        H_est(:, r, p) = Y ./ U;
-    end
-    H_est_mean(:, p) = mean(H_est(:, :, p), 2);
-
-    %% Standard deviation on the FRF estimate
-    H_var = var(H_est(:, :, p), 0, 2);
-    H_std = sqrt(H_var);
-
-    figure("Name", strcat("FRF Estimate, Power Level ", num2str(p-1)));
-    % Excited
-    subplot(2,2,1);
-    plot(f(excitedFreq), db(H_est_mean(excitedFreq, p)), 'o', 'LineWidth', 2, 'Color', [0 0.4470 0.7410]);
-    hold on;
-    fill([f(excitedFreq), fliplr(f(excitedFreq))], ...
-         [(db(H_est_mean(excitedFreq, p) + H_std(excitedFreq)))', ...
-          fliplr((db(H_est_mean(excitedFreq, p) - H_std(excitedFreq)))')], ...
-          'b', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    title('Excited bins with std dev');
-    xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); ylim(limitYAxis); grid on;
-
-    % Non-excited odd
-    subplot(2,2,2);
-    plot(f(oddFreq), db(H_est_mean(oddFreq, p)), 'x', 'LineWidth', 2, 'Color', [0.8500 0.3250 0.0980]);
-    hold on;
-    fill([f(oddFreq), fliplr(f(oddFreq))], ...
-         [(db(H_est_mean(oddFreq, p) + H_std(oddFreq)))', ...
-          fliplr((db(H_est_mean(oddFreq, p) - H_std(oddFreq)))')], ...
-          'r', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    title('Non-excited odd bins with std dev');
-    xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); ylim(limitYAxis); grid on;
-
-    % Non-excited even
-    subplot(2,2,3);
-    plot(f(evenFreq), db(H_est_mean(evenFreq, p)), '*', 'LineWidth', 2, 'Color', [0.9290 0.6940 0.1250]);
-    hold on;
-    fill([f(evenFreq), fliplr(f(evenFreq))], ...
-         [(db(H_est_mean(evenFreq, p) + H_std(evenFreq)))', ...
-          fliplr((db(H_est_mean(evenFreq, p) - H_std(evenFreq)))')], ...
-          'y', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    title('Non-excited even bins with std dev');
-    xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); ylim(limitYAxis); grid on;
-    
-    % Noise
-    subplot(2,2,4);
-    plot(f(noiseFreq), db(H_est_mean(noiseFreq, p)), '.', 'Color', [0.8 0.8 0.8], 'LineWidth', 0.5);
-    hold on;
-    fill([f(noiseFreq), fliplr(f(noiseFreq))], ...
-         [(db(H_est_mean(noiseFreq, p) + H_std(noiseFreq)))', ...
-          fliplr((db(H_est_mean(noiseFreq, p) - H_std(noiseFreq)))')], ...
-          [0.5 0.5 0.5], 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    title('Noise bins with std dev');
-    xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); ylim(limitYAxis); grid on;
-
-    % Signal PSD
-    figure("Name", strcat("Output Signal PSD, Power Level ", num2str(p-1)));
-    Syy = (1/(N*fs)) * abs(Y1).^2;
-    % Excited
-    subplot(2,2,1);
-    plot(f(excitedFreq), db(Syy(excitedFreq, p)), 'o', 'LineWidth', 2, 'Color', [0 0.4470 0.7410]);
-    title('Excited bins');
-    xlabel('Frequency (Hz)'); 
-    ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); 
-    ylim([-300, max(db(Syy)) + 10]);
-    grid on;
-
-    % Non-excited odd
-    subplot(2,2,2);
-    plot(f(oddFreq), db(Syy(oddFreq, p)), 'x', 'LineWidth', 2, 'Color', [0.8500 0.3250 0.0980]);
-    title('Non-excited odd bins');
-    xlabel('Frequency (Hz)'); 
-    ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); 
-    ylim([-300, max(db(Syy)) + 10]);
-    grid on;
-
-    % Non-excited even
-    subplot(2,2,3);
-    plot(f(evenFreq), db(Syy(evenFreq, p)), '*', 'LineWidth', 2, 'Color', [0.9290 0.6940 0.1250]);
-    title('Non-excited even bins');
-    xlabel('Frequency (Hz)'); 
-    ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); 
-    ylim([-300, max(db(Syy)) + 10]);
-    grid on;
-    
-    % Noise
-    subplot(2,2,4);
-    plot(f(noiseFreq), db(Syy(noiseFreq, p)), '.', 'Color', [0.8 0.8 0.8], 'LineWidth', 0.5);
-    title(['Noise bins']);
-    xlabel('Frequency (Hz)'); 
-    ylabel('Magnitude (dB)');
-    xlim([1 fs/2]); 
-    ylim([-300, max(db(Syy)) + 10]);
-    grid on;
-
-    
-
-
-end
