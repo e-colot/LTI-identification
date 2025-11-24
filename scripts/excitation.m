@@ -1,20 +1,27 @@
 clear; close all; clc;
 
 folderPath = '../excitations/';
-signalName = 'multiSine';
+signalNameOdd = 'oddM';
+signalNameFull = 'fullM';
 
 %% RMS + band of interest determination
 
 desiredRMS = 0.1;
-N = 6e3;
+N = 25e3;
 
-Npp = 40; % number of realizations
+Nfull = 5e3;
 
-totalSig = zeros(N, Npp);
-totalSel = [];
+NppOdd = 2; % number of realizations
+NppFull = 20;
 maxExcBin = N/4; % maximum excited frequency bin
 
-for pp = 1:Npp
+oddSig = zeros(N, NppOdd);
+oddSel = [];
+fullSig = zeros(Nfull, NppFull);
+fullSel = [maxExcBin, NppFull];
+
+% odd
+for pp = 1:NppOdd
     if pp == 1
         [sig, sel] = oddMultisine(N, desiredRMS, 'maxExcBin', maxExcBin);
     else
@@ -22,25 +29,47 @@ for pp = 1:Npp
         [sig, ~] = oddMultisine(N, desiredRMS, 'sel', sel, 'maxExcBin', maxExcBin);
     end
 
-    totalSig(:, pp) = sig;
-    totalSel(:, pp) = sel;
+    oddSig(:, pp) = sig;
+    oddSel(:, pp) = sel;
 end
 
-save(strcat(folderPath, signalName, '_Sig_E0_S0.mat'), "totalSig");
-save(strcat(folderPath, signalName, '_Sel_E0_S0.mat'), "totalSel");
+% full
+maxExcBin = Nfull/4; % maximum excited frequency bin
+fullSigFFT = zeros(Nfull, 1);
 
-disp(strcat('Signal saved to', folderPath, signalName, '_Sig_E0_S0.mat'));
-disp(['With ' num2str(size(totalSig,1)) ' points and ' num2str(Npp) ' realizations.']);
-disp(' ');
-disp('saved to multiSine_Sel_E0_S0.mat');
-disp(strcat('Excited frequencies saved to', folderPath, signalName, '_Sel_E0_S0.mat'));
-disp(['With ' num2str(size(totalSel,1)) ' excited frequencies.']);
+for pp = 1:NppFull
+    selIndex = 1;
+    for bin = 1:maxExcBin
+        fullSigFFT(bin + 1) = exp(1j * unifrnd(-pi, pi));
+        fullSel(selIndex, pp) = bin;
+        selIndex = selIndex + 1;
+    end
+    fullSig(:, pp) = real(ifft(fullSigFFT));
+
+    % impose the rms
+    fullSig(:, pp) = fullSig(:, pp) / rms(fullSig(:, pp)) * desiredRMS;
+end
+
+
+save(strcat(folderPath, signalNameOdd, '_Sig_E0_S0.mat'), "oddSig");
+save(strcat(folderPath, signalNameOdd, '_Sel_E0_S0.mat'), "oddSel");
+
+save(strcat(folderPath, signalNameFull, '_Sig_E0_S0.mat'), "fullSig");
+save(strcat(folderPath, signalNameFull, '_Sel_E0_S0.mat'), "fullSel");
+
 
 % DEBUG
 figure;
 subplot(2,1,1);
-plot(totalSig);
-title('Generated multisine signal(s)');
+plot(oddSig);
+title('Generated multisine signal(s) - Odd');
 subplot(2,1,2);
-stem(abs(fft(totalSig)));
-title('FFT of the generated multisine signal(s)');
+stem(abs(fft(oddSig)));
+title('FFT of the generated multisine signal(s) - Odd');
+figure;
+subplot(2,1,1);
+plot(fullSig);
+title('Generated multisine signal(s) - Full');
+subplot(2,1,2);
+stem(abs(fft(fullSig)));
+title('FFT of the generated multisine signal(s) - Full');

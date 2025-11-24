@@ -1,13 +1,15 @@
-function [u, y, realizations, power_levels] = acquisition(fs)
-% [u, y, realizations, power_levels] = acquisition(fs)
+function [u, y, sel, sig, realizations, power_levels] = acquisition(filename)
+% [u, y, sel, sig, realizations, power_levels] = acquisition(fs)
 %
-% Load the acquired input and output signals from .mat files for a given
-% sampling frequency fs.
+% Load the acquired input and output signals from .mat files
+%
 % Inputs:
 %   fs - Sampling frequency (Hz)
 % Outputs:
 %   u - Input signal tensor (samples x realizations x power levels)
 %   y - Output signal tensor (samples x realizations x power levels)
+%   sel - excited bins
+%   sig - input signal
 %   realizations - Number of realizations, determined using available files
 %   power_levels - Number of power levels, determined using available files
 %
@@ -16,11 +18,7 @@ function [u, y, realizations, power_levels] = acquisition(fs)
 
 
     resultsPath = '../results/';
-    filename = strcat('out', num2str(fs/1000), 'k');
     [realizations, power_levels] = detect_counts(resultsPath, filename);
-
-    % remove unused files
-    cleanResults(resultsPath, fs/1000, true);
 
     % load a single file to get N
     file = strcat(resultsPath, filename, "ACQ_R0_P0_E0_M0_F0.mat");
@@ -41,6 +39,17 @@ function [u, y, realizations, power_levels] = acquisition(fs)
             y(:, r+1, p+1) = YR1(:);
         end
     end
+
+    % load sig
+    sigFile = strcat(resultsPath, filename, "AWG_R0_E0.mat");
+    load(sigFile);
+    sig = SigR0;
+
+    % load sel
+    selFile = strcat(resultsPath, filename, "AWGEXC_R0_E0.mat");
+    load(selFile);
+    sel = SelExc0;
+
 end
 
 function [realizations, power_levels] = detect_counts(resultsPath, filename)
