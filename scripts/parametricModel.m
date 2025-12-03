@@ -2,58 +2,63 @@ clear; close all; clc;
 
 fs = 5e3;
 
-%% Load data
-[u, y, realizations, power_levels] = acquisition(fs);
+  % number of poles
+    n_a = 5;
+  % number of zeros
+    n_b = 4;
 
-% assuming the excited freqeuencies are the same for all realizations and power levels
-load('../excitations/multiSine_Sel_E0_S0.mat'); % loads variable 'totalSel'
-load('../excitations/multiSine_Sig_E0_S0.mat'); % loads variable 'totalSig'
+%% get a non parametric model
 
-N = size(u, 1);
-periodN = size(totalSig, 1); % number of samples of the original period
-repNumber = N / periodN; % number of periods in the acquired signal
+[f, G_ML, total_var] = robustMethod("robustMethod/full_5k", fs);
 
-transientPeriods = 1;
-assert(transientPeriods < repNumber, 'Transient periods to remove exceed total number of periods.');
-
-u = u(transientPeriods*periodN + 1:end, :, :);
-y = y(transientPeriods*periodN + 1:end, :, :);
-
-N = size(u, 1);
-repNumber = repNumber - transientPeriods;
-
-excitedFreq = (totalSel(:, 1)*repNumber + 1)';
-
-H_est = zeros(N, realizations, power_levels);
-H_est_mean = zeros(N, power_levels);
-for p = 1:power_levels
-    for r = 1:realizations
-        U = fft(u(:, r, p));
-        Y = fft(y(:, r, p));
-        H_est(:, r, p) = Y ./ U;
+  % put f, G_ML and total_var as a column vectors
+    if (size(f, 1) < size(f, 2))
+        f = f';
     end
-    H_est_mean(:, p) = mean(H_est(:, :, p), 2);
-end
+    if (size(G_ML, 1) < size(G_ML, 2))
+        G_ML = G_ML';
+    end
+    if (size(total_var, 1) < size(total_var, 2))
+        total_var = total_var';
+    end
+  % remove NaN's from G_ML (at Nyquist frequency);
+    valid = ~isnan(G_ML);
+    f       = f(valid);
+    G_ML    = G_ML(valid);
+    total_var = total_var(valid);
 
-FRF = H_est_mean(excitedFreq, :);
-f = (0:N-1)*fs/N;
-f = f(excitedFreq);
+    
 
-figure;
-plot(f, db(FRF), 'o', 'LineWidth', 2);
-xlim([fs/N max(f)]);
-title('Estimated Frequency Response Function (FRF)');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-grid on;
+%% Initial estimate using GTLS
+
+% J = [Y sY ... U sU ...]
+% taking U = 1 and Y = G_ML
+
+  % placing s in the matrix J
+    J = repmat(1j*2*pi*f, 1, n_a+n_b+2);
+    J = J.^([(0:n_a) (0:n_b)]);
+  % placing G_ML in the matrix
+    J = J.*[repmat(G_ML, 1, n_a+1) ones(size(G_ML, 1), n_b+1)];
+
+% C_J = column covariance of J
+    
+  % placing sqrt(s) in the matrix J
+    C_J = repmat(1j*2*pi*f, 1, n_a+1);
+    C_J = C_J.^(0:n_a);
+  % placing total_var in the matrix
+    C_J = C_J .* repmat(total_var, 1, n_a+1);
+  % the column with U have no variance (U = 1)
+    C_J = [C_J zeros(size(G_ML, 1), n_b+1)];
+
+% compute the gsvd
+
+[U,V,X,C,S] = gsvd(J, sqrt(C_J));
+
+[~, i] = min(diag(C)./diag(S));
+
+Xinv = inv(X');
+theta_GTLS = 1/S(i, i) * Xinv(:, i);
 
 
-%% Parametric model 
-% try different models :
-% - LS
-% - TLS
-% - GTLS
-% - BTLS
-% - ML
-% with different orders
+
 

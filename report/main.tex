@@ -35,6 +35,17 @@
    \Large\bfseries #1\par\nobreak\vskip 10pt}}
 \makeatother
 
+% Redefine \chapter to avoid forcing a page break before chapters.
+% The default \chapter issues a \clearpage or \cleardoublepage; this
+% redefinition removes that so chapters start immediately where placed.
+\makeatletter
+\renewcommand\chapter{%
+  \global\@topnum\z@%
+  \@afterindentfalse%
+  \secdef\@chapter\@schapter%
+}
+\makeatother
+
 
 \titleULB{
 	title={Project - LTI identification},
@@ -51,9 +62,9 @@
 
 \input{content.tex}
 
-\printglossary
+%\printglossary
 
-\printglossary[type=\acronymtype]
+%\printglossary[type=\acronymtype]
 
 %Bibliography
 \nocite{*}

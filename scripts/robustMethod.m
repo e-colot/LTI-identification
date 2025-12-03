@@ -1,5 +1,5 @@
-function [] = robustMethod(dataFile, fs)
-% robustMethod(dataFile, fs)
+function [f, G_ML, total_var] = robustMethod(dataFile, fs)
+% [f, G_ML, noise_var, distortion_var] = robustMethod(dataFile, fs)
 %
 % Computes the FRF estimate using the robust method.
 % Based on multiple realization, each of which have multiple periods.
@@ -20,9 +20,8 @@ function [] = robustMethod(dataFile, fs)
     % transient visualization
         figure;
         plot(db(y(1:periodN, 1, 1) - y(periodN + 1:2*periodN, 1, 1)), "LineWidth", 2);
-        title('y_{P1} - y_{P2}');
         xlabel('Samples');
-        ylabel('Amplitude (dB)');
+        ylabel('Amplitude [dB]');
         grid on;
 
     % transient removal
@@ -68,6 +67,8 @@ function [] = robustMethod(dataFile, fs)
     noise_var = mean(noiseVar_2D, 1) / realizations;
     distortion_var = var(G_1D, 0, 1) / realizations;
 
+    total_var = noise_var + distortion_var;
+
     %% Plots
 
         f = (0:periodN-1)'*(fs/periodN);
@@ -76,8 +77,8 @@ function [] = robustMethod(dataFile, fs)
         subplot(211);
         plot(f, db(G_ML), 'o', 'LineWidth', 2);
         title('Robust Method FRF Estimate');
-        xlabel('Frequency (Hz)');
-        ylabel('|FRF| (dB)');
+        xlabel('Frequency [Hz]');
+        ylabel('|FRF| [dB]');
         xlim([1/fs fs/4]);
         grid on;
 
@@ -85,10 +86,10 @@ function [] = robustMethod(dataFile, fs)
         hold on;
         plot(f, db(noise_var), 'r', 'LineWidth', 2);
         plot(f, db(distortion_var), 'b', 'LineWidth', 2);
-        plot(f, db(noise_var + distortion_var), 'g', 'LineWidth', 2);
+        plot(f, db(total_var), 'g', 'LineWidth', 2);
         title('Variance Estimates');
-        xlabel('Frequency (Hz)');
-        ylabel('Variance (dB)');
+        xlabel('Frequency [Hz]');
+        ylabel('Variance [dBV^2]');
         xlim([1/fs fs/4]);
         grid on;
         legend('Noise Variance', 'Distortion Variance', 'Total Variance');

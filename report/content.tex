@@ -15,7 +15,132 @@ The objective will be to identify the linear part of the system and to have a me
 
 Before making any useful measurement, the parameters of the excitation signal must be chosen to match to the DUT parameters.The rms of the applied signal must indeed be determined to use the full range of the ADC while avoiding saturation of the system. The poles of the system must also be roughly known to determine the band of interest, making sure that the system's dynamics are measured.
 
-By applying a random phase multisine excitation signal with various amplitudes and sampling frequencies, a rough estimation of the FRF of the system has been obtained. This tuning procedure allowed to identify an amplitude to use for the excitation signal and a band of interest below $1.5kHz$, which led to the choice of a sampling frequency of $f_s = 5kHz$. 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Pictures/outputSignal.png}
+    \caption{Output signal in time (top) and frequency (bottom) domains. $f_s = 5$kHz}
+    \label{fig:outputSignal}
+\end{figure}
+
+The output signal is shown in Fig. \ref{fig:outputSignal}. The time domain plot shows that the output signal stays between $-4V$ and $4V$. To keep some margin, the range of the ADC has been put to $[-5; 5]V$. Even though the output in the frequency domain is not equivalent to the system's FRF, it gives a rough idea of it when the input signal's FFT is flat, which was the case here. It can therefore be seen that there is not much happening above $1.25 \text{kHz}$, which led to the choice of $5$kHz for the sampling frequency. The number of points in the excitation signal has been chosen to be $N = 5000$, which means every experiment takes $1$ second. Even though this means that the spectral resolution is of only $1$ Hz, it allows to have a relatively short measurement time.
+
+\chapter{Nonlinear distortion and noise analysis}
+
+Two methods are used to distinguish the nonlinear distortions from the noise. The \textit{fast method} uses a single experiment and allows to split the output spectrum in linear, nonlinear and noise contributions. The \textit{robust method} uses multiple experiments and allows to compute an estimate of the variances of nonlinear distortion and noise together with an FRF estimate.
+
+\section{Fast method}
+
+The excitation signal is an odd multisine with holes. This means that only odd frequencies are excited and some of those odd frequencies are not in order to have a measure for odd nonlinear distortions. During the excitation generation, 1 odd bin out of 4 is randomly chosen to be not excited. 
+
+The input signal is then repeated for a few periods. This allows to get rid of the transient, shown in Fig. \ref{fig:transientRemoval}, and to measure noise. The FFT of the whole signal can be taken, dividing the spectral resolution by the number of periods. The added bins are not linear combinations of input frequencies and therefore only contain noise.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Pictures/transientRemoval.png}
+    \caption{Difference between $1^{\text{st}}$ and $2^{\text{nd}}$ periods of the output signal in time domain}
+    \label{fig:transientRemoval}
+\end{figure}
+
+The spectrum of the output signal is then divided into 4 categories:
+\begin{itemize}
+    \item \textbf{Linear}, for bins that were excited.
+    \item \textbf{Even distortions}, for bins that are a combination of an even number of excited bins.
+    \item \textbf{Odd distortions}, for bins that are a combination of an odd number of excited bins.
+    \item \textbf{Noise}, for bins that are added by the multiple periods.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Pictures/fastMethod1.png}
+    \caption{Results of the fast method}
+    \label{fig:fastMethod1}
+\end{figure}
+
+Fig. \ref{fig:fastMethod1} shows that even distortion is close to the noise level and therefore does not impact much the signal. Odd distortion on the other hand is quite high and is close to the level of the linear part near its peak.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Pictures/fastMethod2.png}
+    \caption{Zoomed in results of the fast method with an increased number of samples}
+    \label{fig:fastMethod2}
+\end{figure}
+
+The same method has been applied with more samples in Fig. \ref{fig:fastMethod2} to increase the spectral resolution and have a better view of even distortion, which is still present. It is there measured to be $10$ dBV above the noise level around $150$Hz, which is still below the odd distortion level.
+
+\section{Robust method}
+
+This method relies on computing a FRF for each of the $P$ period and the $M$ realizations. The variance across the periods for realization $m$ gives $\hat{\sigma}^{2 [m]}_n$, the noise variance. 
+
+\begin{gather}
+    \hat{G}^{[m, p]} = \frac{Y^{[m, p]}}{U^{[m]}}
+\end{gather}
+\begin{gather}
+    \hat{G}^{[m]} = \frac{1}{P} \sum_{p=1}^P \hat{G}^{[m, p]} \hspace{2cm} \hat{\sigma}^{2 [m]}_n = \frac{1}{P(P-1)} \sum_{p=1}^{P} \left| \hat{G}^{[m, p]} - \hat{G}^{[m]}\right|^2
+\end{gather}
+
+These noise variances on a single realization are then averaged across the realizations and divided by M because the averaging reduces the variance. This gives the total noise variance $\sigma^2_n$.
+
+\begin{gather}
+    \hat{\sigma}^2_n = \frac{1}{M^2} \sum_{m=1}^{M} \hat{\sigma}^{2 [m]}_n
+\end{gather}
+
+The averaged FRF of a single realization $\hat{G}^{[m]}$ doesn't contain noise if the number of periods was big enough. But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough.
+
+\begin{gather}
+    \hat{G}_{\text{ML}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]} \hspace{2cm} \hat{\sigma}_{\text{ML}} = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{ML}}\right|^2
+\end{gather}
+
+A full multisine (excited up to $1.25$kHz) has been applied to the DUT for $P=20$ periods and $M=20$ realizations. The results are shown on Fig. \ref{fig:robustMethod}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Pictures/robustMethod.png}
+    \caption{Results of the robust method}
+    \label{fig:robustMethod}
+\end{figure}
+
+\chapter{Best linear approximation}
+
+A linearized model of the system can be determined to approximate the DUT as an LTI. The best linear approximation, or BLA, is therefore computed as the "best fit". Because nonlinear distortions are dependent on the input signal, the BLA computed here is valid for excitation signals with a similar \textit{Riemann equivalent spectrum}. 
+
+\section{Non parametric model}
+\label{sec:nonParametricModel}
+
+The result of the robust method shown in Fig. \ref{fig:robustMethod} is, in fact, an estimated BLA and it already comes with its uncertainty. Because of the successive averaging, it should be able to remove noise and nonlinear distortions which are zero-mean \footnote{It is only true in expected value so it can only be approached using a discrete number of periods and realizations}.
+
+\section{Parametric model}
+
+Based on the non parametric model of Sec. \ref{sec:nonParametricModel}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ such that:
+
+\begin{equation}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\sum_{k=0}^{n_a} a_k s^k}
+    \label{eq:TFgeneralForm}
+\end{equation}
+
+The estimator for the parameters is then chosen as a GTLS, or generalized total least squares. This estimator has the nice property of being consistent. It aims to find the minimum of the error $E$ or, equivalently, to minimize $|| J \theta ||_2^2$ where:
+
+\begin{equation}
+    E = AY - BU = J \theta
+\end{equation}
+\vspace{-1.2cm}
+\begin{align}
+    \Rightarrow J = 
+    \begin{bmatrix}
+    \vdots & \vdots &  & \vdots & \vdots & \vdots & & \vdots\\
+    Y & s Y & \cdots & s^{n_a} Y & U & s U & \cdots & s^{n_b} U\\
+    \vdots & \vdots &  & \vdots & \vdots & \vdots & & \vdots\\
+    \end{bmatrix} \quad \text{and} \quad \theta = 
+    \begin{bmatrix}
+    a_0 & a_1 & \cdots & a_{n_a} & b_0 & b_1 & \cdots & b_{n_b}
+    \end{bmatrix}^T
+\end{align}
+
+To be consistent, the optimization is under the constraint $||C_J^{1/2} \theta ||_2^2 = 1$ where $C_J$ is defined as the covariance matrix of the noise dependent par of $J$. Put in equations:
+
+\begin{equation}    
+    J = J_0 + \Delta J \hspace{2cm} C_J = \mathbb{E} \left\{\Delta J^H \Delta J\right\}
+\end{equation}
+
 
 
 
