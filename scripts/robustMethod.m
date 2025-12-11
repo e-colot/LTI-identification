@@ -1,4 +1,4 @@
-function [f, G_ML, total_var] = robustMethod(dataFile, fs)
+function [f, G_ML, total_var] = robustMethod(dataFile, fs, showPlot)
 % [f, G_ML, noise_var, distortion_var] = robustMethod(dataFile, fs)
 %
 % Computes the FRF estimate using the robust method.
@@ -6,7 +6,13 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs)
 % The FRF is computed for each period (G_2D) and is averaged over them to build 1 FRF estimate for each realization (G_1D)
 % The variance of G_2D equals the noise variance. The FRF are then averaged over the realizations, giving G_ML.
 % The variance of G_1D gives a measure for the nonlinear distortions.
+% showPlot = false disables figures
 %
+
+      % parsing arguments
+    if nargin <= 2
+        showPlot = true;
+    end
 
     %% Load data
     [u, y, ~, sig, realizations, ~] = acquisition(dataFile);
@@ -17,12 +23,14 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs)
 
     %% Remove transient
 
+    if showPlot
     % transient visualization
         figure;
         plot(db(y(1:periodN, 1, 1) - y(periodN + 1:2*periodN, 1, 1)), "LineWidth", 2);
         xlabel('Samples');
         ylabel('Amplitude [dB]');
         grid on;
+    end
 
     % transient removal
         transientPeriods = 1;
@@ -63,16 +71,16 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs)
     end
 
     % average nonlinear distortions out
-    G_ML = squeeze(mean(G_1D, 1));
-    noise_var = mean(noiseVar_2D, 1) / realizations;
-    distortion_var = var(G_1D, 0, 1) / realizations;
+    G_ML = squeeze(mean(G_1D, 1))';
+    noise_var = mean(noiseVar_2D, 1)' / realizations;
+    distortion_var = var(G_1D, 0, 1)' / realizations;
 
     total_var = noise_var + distortion_var;
+    f = (0:periodN-1)'*(fs/periodN);
 
     %% Plots
-
-        f = (0:periodN-1)'*(fs/periodN);
-
+    
+    if showPlot
         figure;
         subplot(211);
         plot(f, db(G_ML), 'o', 'LineWidth', 2);
@@ -94,4 +102,5 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs)
         grid on;
         legend('Noise Variance', 'Distortion Variance', 'Total Variance');
 
+    end
 end

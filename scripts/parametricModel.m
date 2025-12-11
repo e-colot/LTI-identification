@@ -2,63 +2,51 @@ clear; close all; clc;
 
 fs = 5e3;
 
-  % number of poles
+  % order of the denominator of G
     n_a = 5;
-  % number of zeros
-    n_b = 4;
+  % order of the numerator of G
+    n_b = 5;
 
 %% get a non parametric model
 
 [f, G_ML, total_var] = robustMethod("robustMethod/full_5k", fs);
 
-  % put f, G_ML and total_var as a column vectors
-    if (size(f, 1) < size(f, 2))
-        f = f';
-    end
-    if (size(G_ML, 1) < size(G_ML, 2))
-        G_ML = G_ML';
-    end
-    if (size(total_var, 1) < size(total_var, 2))
-        total_var = total_var';
-    end
-  % remove NaN's from G_ML (at Nyquist frequency);
+  % remove NaN's from G_ML (at Nyquist frequency)
     valid = ~isnan(G_ML);
-    f       = f(valid);
-    G_ML    = G_ML(valid);
+    f = f(valid);
+    G_ML = G_ML(valid);
+    total_var = total_var(valid);
+  % only keep frequencies below 1.25kHz (excited ones)
+    valid = f <= 1250;
+    valid(1) = 0;
+    f = f(valid);
+    G_ML = G_ML(valid);
     total_var = total_var(valid);
 
-    
+
+%% Initial estimate using TLS
+    [Atls, Btls] = TLS(G_ML, f, n_a, n_b);
+
+    subplot(211);
+    hold on;
+    plotTF(Atls, Btls, f);
 
 %% Initial estimate using GTLS
+    [Agtls, Bgtls] = GTLS(G_ML, total_var, f, n_a, n_b);
 
-% J = [Y sY ... U sU ...]
-% taking U = 1 and Y = G_ML
+    subplot(211);
+    hold on;
+    plotTF(Agtls, Bgtls, f);
 
-  % placing s in the matrix J
-    J = repmat(1j*2*pi*f, 1, n_a+n_b+2);
-    J = J.^([(0:n_a) (0:n_b)]);
-  % placing G_ML in the matrix
-    J = J.*[repmat(G_ML, 1, n_a+1) ones(size(G_ML, 1), n_b+1)];
+%% Iterative estimate using BTLS
+    theta0 = [flipud(Agtls); flipud(Bgtls)];
+    itrMax = 20;
+    r = 0.5;
+    [Abtls, Bbtls] = BTLS(G_ML, total_var, f, n_a, n_b, itrMax, theta0, r);
 
-% C_J = column covariance of J
-    
-  % placing sqrt(s) in the matrix J
-    C_J = repmat(1j*2*pi*f, 1, n_a+1);
-    C_J = C_J.^(0:n_a);
-  % placing total_var in the matrix
-    C_J = C_J .* repmat(total_var, 1, n_a+1);
-  % the column with U have no variance (U = 1)
-    C_J = [C_J zeros(size(G_ML, 1), n_b+1)];
-
-% compute the gsvd
-
-[U,V,X,C,S] = gsvd(J, sqrt(C_J));
-
-[~, i] = min(diag(C)./diag(S));
-
-Xinv = inv(X');
-theta_GTLS = 1/S(i, i) * Xinv(:, i);
-
-
-
+    figure(2);
+    subplot(211);
+    hold on;
+    plotTF(Abtls, Bbtls, f);
+    legend('Non parametric', 'TLS estimate', 'GTLS estimate', 'BTLS estimate');
 
