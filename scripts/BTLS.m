@@ -1,9 +1,28 @@
-function [A, B] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
-% TODO
+function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
+% [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
+% Determines the parameters A and B using a GTLS estimator.
+% 
+% Na and Nb are the order of the denominator and numerator of the
+% parametric transfer function
 %
-% Written by E. Colot on Dec 11 2025
+% Written by E. Colot on Dec 13 2025
 
-    thetaSav = zeros(length(theta0), itrMax);
+prevCost = NaN;
+s = 1j*2*pi*f;
+
+% J0 = [Y sY ... U sU ...]
+% taking U = 1 and Y = G_BLA
+
+  % placing s in the matrix J
+    J0 = repmat(1j*2*pi*f, 1, Na+Nb+2);
+    J0 = J0.^([(0:Na) (0:Nb)]);
+  % placing G_BLA in the matrix
+    J0 = J0.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
+
+
+% C_J = column covariance of DeltaJ
+    deltaH0 = zeros(length(f), Na+Nb+2);
+    deltaH0(:, 1:Na+1) = repmat(-1j*2*pi*f, 1, Na+1).^(0:Na);
 
     for itr = 1:itrMax
 
@@ -16,17 +35,8 @@ function [A, B] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
 
 %% ------------ Building J ---------------------
 
-    % J = [Y sY ... U sU ...]
-    % taking U = 1 and Y = G_BLA
-    
-      % placing s in the matrix J
-        J = repmat(1j*2*pi*f, 1, Na+Nb+2);
-        J = J.^([(0:Na) (0:Nb)]);
-      % placing G_BLA in the matrix
-        J = J.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
-
       % Add weight to J
-        J = W * J;
+        J = W * J0;
     
       % To force real parameters, the real and imaginary part of J must be
       % split
@@ -39,10 +49,8 @@ function [A, B] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
 
 %% ------------ Building C_J^0.5 ---------------------
 
-    % C_J = column covariance of DeltaJ
-        deltaH = zeros(length(f), Na+Nb+2);
-        deltaH(:, 1:Na+1) = repmat(-1j*2*pi*f, 1, Na+1).^(0:Na);
-        deltaH = deltaH * S;
+        deltaH = deltaH0 * S;
+        deltaH = W * deltaH;
         deltaH = deltaH .* repmat(sqrt(G_var), 1, Na+Nb+2);
     
         C_J = deltaH' * deltaH;
@@ -65,16 +73,23 @@ function [A, B] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
         
         % because of the rms normalization
         newTheta = S * newTheta;
-
-        thetaSav(:, itr) = oldTheta;
         
+%% Check the new cost
+        A = flipud(newTheta(1:Na+1));
+        B = flipud(newTheta(Na+2:end));
+        A_eval = polyval(A, s);
+        B_eval = polyval(B, s);
+        
+        G_est = B_eval./A_eval;
+        err = G_BLA-G_est;
+
+        cost = sum(abs(err).^2 ./ (var_e.^r));
+        if (abs(cost - prevCost) < 1e-20)
+            disp(['BTLS stopped after ', num2str(itr), ' iterations due to convergence']);
+            return
+        end
+        prevCost = cost;
 
     end
-
-    A = flipud(newTheta(1:Na+1));
-    B = flipud(newTheta(Na+2:end));
-
-    figure(3);
-    plot(db(thetaSav'));
 
 end

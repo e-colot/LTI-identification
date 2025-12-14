@@ -1,5 +1,5 @@
-function [A, B] = TLS(G_BLA, f, Na, Nb)
-% [A, B] = TLS(G_BLA, f, Na, Nb)
+function [A, B, cost] = TLS(G_BLA, f, Na, Nb)
+% [A, B, cost] = TLS(G_BLA, f, Na, Nb)
 % Determines the parameters A and B using a TLS estimator.
 % 
 % Na and Nb are the order of the denominator and numerator of the
@@ -34,5 +34,16 @@ function [A, B] = TLS(G_BLA, f, Na, Nb)
         
         A = flipud(theta_TLS(1:Na+1));
         B = flipud(theta_TLS(Na+2:end));
+
+%% Cost computation
+
+    s = 1j*2*pi*f;
+    A_eval = polyval(A, s);
+    B_eval = polyval(B, s);
+    
+    G_est = B_eval./A_eval;
+    err = G_BLA-G_est;
+
+    cost = sum(abs(err).^2);
 
 end

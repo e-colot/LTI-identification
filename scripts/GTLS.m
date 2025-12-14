@@ -1,5 +1,5 @@
-function [A, B] = GTLS(G_BLA, G_var, f, Na, Nb)
-% [A, B] = GTLS(G_BLA, G_var, f, Na, Nb)
+function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
+% [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
 % Determines the parameters A and B using a GTLS estimator.
 % 
 % Na and Nb are the order of the denominator and numerator of the
@@ -58,5 +58,10 @@ function [A, B] = GTLS(G_BLA, G_var, f, Na, Nb)
         
         A = flipud(theta_GTLS(1:Na+1));
         B = flipud(theta_GTLS(Na+2:end));
+
+%% Cost computation
+
+    err = J*theta_GTLS;
+    cost = sum(abs(err).^2);
 
 end
