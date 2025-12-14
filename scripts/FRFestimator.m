@@ -5,6 +5,7 @@ fs = 5e3;
 %% fast method
 
 fastMethod("fastMethod1/odd_5k", fs);
+%fastMethod("fastMethodEven/out5k", fs);
 
 %% Robust method 
 

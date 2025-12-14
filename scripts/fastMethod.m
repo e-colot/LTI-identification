@@ -49,7 +49,7 @@ function [] = fastMethod(dataFile, fs)
 
         figure; 
         for itr = 1:4
-            plot(f(indices{itr}), db(abs(Y(indices{itr}))), 'o', 'Color', colors{itr}, 'LineWidth', 2); 
+            plot(f(indices{itr}), db(abs(Y(indices{itr}, 1))), 'o', 'Color', colors{itr}, 'LineWidth', 2); 
             hold on;
         end
         

@@ -17,8 +17,6 @@ maxExcBin = N/4; % maximum excited frequency bin
 
 oddSig = zeros(N, NppOdd);
 oddSel = [];
-fullSig = zeros(Nfull, NppFull);
-fullSel = [maxExcBin, NppFull];
 
 % odd
 for pp = 1:NppOdd
@@ -36,6 +34,9 @@ end
 % full
 maxExcBin = Nfull/4; % maximum excited frequency bin
 fullSigFFT = zeros(Nfull, 1);
+
+fullSig = zeros(Nfull, NppFull);
+fullSel = zeros(maxExcBin, NppFull);
 
 for pp = 1:NppFull
     selIndex = 1;

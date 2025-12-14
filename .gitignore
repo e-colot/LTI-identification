@@ -47,3 +47,6 @@ bin/
 # User-specific files or directories
 *.DS_Store
 Thumbs.db
+
+# Matlab austosave files
+*.asv
