@@ -19,11 +19,11 @@ N = fs/spectralRes;
 maxExcBin = maxFreq / spectralRes; % maximum excited frequency bin
 SigFFT = zeros(N, 1);
 Sig = zeros(N, 2);
-fullSel = zeros(maxExcBin, 2);
+Sel = zeros(maxExcBin, 2);
 
 for rep = 1:2
     SigFFT(2:maxExcBin+1) = exp(1j * unifrnd(-pi, pi, maxExcBin, 1));
-    fullSel(:, rep) = (1:maxExcBin)';
+    Sel(:, rep) = (1:maxExcBin)';
 
     Sig(:, rep) = real(ifft(SigFFT));
 
@@ -44,6 +44,11 @@ end
     title('Generated multisine for scanning - frequency');
     xlabel('Frequency [Hz]');
     ylabel('Amplitude [dBV]');
+
+folderPath = '../excitations/';
+signalName = 'frequencyScan';
+save(strcat(folderPath, signalName, '_Sig_E0_S0.mat'), "Sig");
+save(strcat(folderPath, signalName, '_Sel_E0_S0.mat'), "Sel");
 
 pause;
 

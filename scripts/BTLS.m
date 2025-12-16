@@ -1,11 +1,15 @@
-function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
-% [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, theta0, r)
-% Determines the parameters A and B using a GTLS estimator.
+function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, r)
+% [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, r)
+% Determines the parameters A and B using a BTLS estimator. The starting
+% value for theta is computed using a GTLS estimator
 % 
 % Na and Nb are the order of the denominator and numerator of the
 % parametric transfer function
 %
 % Written by E. Colot on Dec 13 2025
+
+[Agtls, Bgtls, ~] = GTLS(G_BLA, G_var, f, Na, Nb);
+theta0 = [flipud(Agtls); flipud(Bgtls)];
 
 prevCost = NaN;
 s = 1j*2*pi*f;
@@ -85,7 +89,7 @@ s = 1j*2*pi*f;
 
         cost = sum(abs(err).^2 ./ (var_e.^r));
         if (abs(cost - prevCost) < 1e-20)
-            disp(['BTLS stopped after ', num2str(itr), ' iterations due to convergence']);
+            % disp(['BTLS stopped after ', num2str(itr), ' iterations due to convergence']);
             return
         end
         prevCost = cost;
