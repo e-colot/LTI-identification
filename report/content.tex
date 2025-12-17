@@ -178,7 +178,7 @@ The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fac
 
 \subsection{Parametric Model}
 
-Based on the nonparametric model of Sec. \ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ giving the following expression
+Based on the nonparametric model of Sec.~\ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ giving the following expression
 
 \begin{equation}
     G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\sum_{k=0}^{n_a} a_k s^k}.
@@ -213,17 +213,17 @@ a clever choice of $U$ simplifies the choice of $Y$, as
 
 \paragraph{Forcing real valued parameters} A real system is described by real coefficients so the imaginary part of $\theta$ must be equal to $0$. The regressor must therefore be changed.
 \begin{equation}
-    y = H \times \theta
+    Y = H \times \theta
 \end{equation}
 \vspace{-0.8cm}
 \begin{multline}
-    \Rightarrow \quad \Re\left\{y\right\} + j \Im\left\{y\right\} = \Big(\Re\left\{H\right\} + j \Im\left\{H\right\}\Big) \\
+    \Rightarrow \quad \Re\left\{Y\right\} + j \Im\left\{Y\right\} = \Big(\Re\left\{H\right\} + j \Im\left\{H\right\}\Big) \\
     {} \times \Big(\Re\left\{\theta\right\} + j \Im\left\{\theta\right\}\Big)
 \end{multline}
 \begin{equation}
     \Leftrightarrow \quad \begin{bmatrix}
-        \Re\left\{y\right\}\\
-        \Im\left\{y\right\}
+        \Re\left\{Y\right\}\\
+        \Im\left\{Y\right\}
     \end{bmatrix} = \begin{bmatrix}
         \Re\left\{H\right\} & -\Im\left\{H\right\}\\
         \Im\left\{H\right\} & \Re\left\{H\right\}
@@ -235,14 +235,17 @@ a clever choice of $U$ simplifies the choice of $Y$, as
 And because $\Im\left\{\theta\right\} = 0$, it becomes
 \begin{equation}
     \begin{bmatrix}
-        \Re\left\{y\right\}\\
-        \Im\left\{y\right\}
+        \Re\left\{Y\right\}\\
+        \Im\left\{Y\right\}
     \end{bmatrix} = \begin{bmatrix}
         \Re\left\{H\right\}\\
         \Im\left\{H\right\}
     \end{bmatrix} \times \Re\left\{\theta\right\}.
 \end{equation}
-Thus $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$.
+Thus $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $Y_{\text{re}}$ and $H_{\text{re}}$ as follows
+\begin{equation}
+    Y_{\text{re}} = H_{\text{re}} \times \Re\left\{\theta\right\}.
+\end{equation}
 
 As explained later on, the GTLS estimator needs a covariance matrix $C_J$ that depends on $J$. Because $J$ has become $J_{\text{re}}$, $C_{J_{\text{re}}}$ must be derived. starting from
 \begin{equation}
@@ -285,33 +288,81 @@ Finally, by comparing~(\ref{eq:C_Jre1}) with~(\ref{eq:C_Jre2}), it is found that
     C_{J_{\text{re}}} = \Re \Big\{ C_J \Big\}.
 \end{equation}
 
+\subsubsection{Linear Least Squares Estimator (LLS)}
 
+It minimizes
+\begin{equation}
+    V_{\text{LLS}} = \sum_{k} |E(k)|^2,
+\end{equation}
+where $E(k) = AY(k)-BU(k)$. The optimal parameters $\theta_{\text{LLS}}$ is found by writing the problem as
+\begin{equation}
+    Y = H \theta_{\text{LLS}},
+\end{equation}
+under the assumption that $a_0$ is different from $0$. With all the previous tricks, it becomes
+\begin{equation}
+    G_{\text{BLA}_{\text{re}}} = \tilde{H}_{\text{re}} \tilde{\theta}_{\text{LLS}}
+\end{equation}
+and its solution is given by
+\begin{equation}
+    \theta_{\text{LLS}} = S \Big(H_{\text{re}}\times S\Big)^\dagger G_{\text{BLA}_{\text{re}}}
+\end{equation}
 
+\subsubsection{Total Least Squares Estimator (TLS)}
 
-% The estimator for the parameters is then chosen as a GTLS, or generalized total least squares. This estimator has the nice property of being consistent. It aims to find the minimum of the error $E$ or, equivalently, to minimize $|| J \theta ||_2^2$ where:
+It minimizes the same cost function
+\begin{equation}
+    V_{\text{TLS}} = \sum_{k} |E(k)|^2,
+\end{equation}
+but there is another constraint which doesn't require $a_0$ to be different from $0$, given by
+\begin{equation}
+    ||\theta_{\text{TLS}}||_2^2 = 1.
+\end{equation}
+The estimated parameters are then
+\begin{equation}
+    \theta_{\text{TLS}} = S V_{\tilde{J}_{\text{re}}[:,\text{end}]},
+\end{equation}
+where $J$ is the regression matrix such that
+\begin{equation}
+    E = J \theta_{\text{TLS}}
+\end{equation}
+and $V_{\tilde{J}_{\text{re}}}$ is the right matrix of the singular value decomposition (svd) of $\tilde{J}_{\text{re}}$. This estimator is not consistent because the covariance of $J$ is different from the identity matrix.
 
-% \begin{equation}
-%     E = AY - BU = J \theta
-% \end{equation}
-% \vspace{-1.2cm}
-% \begin{align}
-%     \Rightarrow J = 
-%     \begin{bmatrix}
-%     \vdots & \vdots &  & \vdots & \vdots & \vdots & & \vdots\\
-%     Y & s Y & \cdots & s^{n_a} Y & U & s U & \cdots & s^{n_b} U\\
-%     \vdots & \vdots &  & \vdots & \vdots & \vdots & & \vdots\\
-%     \end{bmatrix} \quad \text{and} \quad \theta = 
-%     \begin{bmatrix}
-%     a_0 & a_1 & \cdots & a_{n_a} & b_0 & b_1 & \cdots & b_{n_b}
-%     \end{bmatrix}^T
-% \end{align}
+\subsubsection{Generalized Total Least Squares Estimator (GTLS)}
 
-% To be consistent, the optimization is under the constraint $||C_J^{1/2} \theta ||_2^2 = 1$ where $C_J$ is defined as the covariance matrix of the noise dependent par of $J$. Put in equations:
+It allows to overcome the inconsistency of the TLS estimator by using the covariance matrix of $J$, namely
+\begin{equation}
+    C_J = \mathbb{E} \Big\{ \Delta J^H \Delta J \Big\},
+\end{equation}
+where $\Delta J$ contains the noisy contributions of $J$. The cost function is
+\begin{equation}
+    V_{\text{GTLS}} = ||J \theta_{\text{GTLS}}||_2^2,
+\end{equation}
+under the constraint that
+\begin{equation}
+    ||C_J^{1/2} \theta_{\text{GTLS}}||_2^2 = 1.
+\end{equation}
+With $X_{\text{re}}$ the right matrix of the generalized svd (gsvd) of $\tilde{J}_{\text{re}}$ and $C_{\tilde{J}_{\text{re}}}^{1/2}$,
+\begin{equation}
+    \theta_{\text{GTLS}} = S (X_{\text{re}}^T)_{[:,i]}^{-1} \frac{1}{D_{\text{re}}(i, i)}.
+\end{equation} 
+To determine $i$, the middle matrices $C_{\text{re}}$ and $D_{\text{re}}$ of the gsvd are used:
+\begin{equation}
+    i = \arg \min_i \frac{C_{\text{re}}(i, i)}{D_{\text{re}}(i, i)}
+\end{equation}
 
-% \begin{equation}    
-%     J = J_0 + \Delta J \hspace{2cm} C_J = \mathbb{E} \left\{\Delta J^H \Delta J\right\}
-% \end{equation}
+\subsubsection{Bootstrapped Total Least Squares Estimator (BTLS)}
 
+All the previous estimators tend to overemphasize high frequency errors as the regressors ($H$ or $J$) become large at higher frequencies. The BTLS estimator puts a weight inversely proportional to the standard deviation of the error at each frequency.
+
+In practice, it is the same as a GTLS estimator where
+\begin{equation}
+    \tilde{J}_{\text{re}} \quad \mapsto \quad W \tilde{J}_{\text{re}}
+\end{equation}
+with
+\begin{equation}
+    W = \text{diag} \sigma_e^{-r}.
+\end{equation}
+The parameter $r$ is then chosen in $[0; 1]$ where a value close to $0$ corresponds to the GTLS estimator.
 
 
 
