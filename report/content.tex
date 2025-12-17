@@ -1,53 +1,62 @@
-\chapter{System description}
+\section{System Description}
 
-The device studied throughout this project is a linear system with a static nonlinear feedback loop. It has a single input and a single output and the feedback is known to follow the input-output relation :
+The device studied throughout this project is a linear system with a static nonlinear feedback loop. It has a single input and a single output and the feedback is known to follow the input-output relation given by
 \begin{equation}
-    y(t) = u^3(t)
-    \label{eq:NL feedback}
+    y(t) = u^3(t).
+    \label{eq:NL_feedback}
 \end{equation}
 
-The objective will be to identify the linear part of the system and to have a measure of the nonlinearity and noise levels. The knowledge of Eq. \ref{eq:NL feedback} will not be used, except for a small parenthesis about odd and even non linearities.
+The objective will be to identify the linear part of the system and to have a measure of the nonlinearity and noise levels. The knowledge of~(\ref{eq:NL_feedback}) will not be used, except for a small parenthesis about odd and even nonlinearities.
 
-The measurement device (referred to as the \textit{PXI setup} in the comments of the Matlab code) allows to send only multisines and their RMS value cannot exceed $1$V. Its ADC's have a range that can be chosen and can sample at high frequencies ($> 1$GHz).
-
-
+The measurement device (referred to as the \textit{PXI setup}) allows to send only multisines and their RMS value cannot exceed $1$~V. Its ADCs have a range that can be chosen and can sample at high frequencies ($> 1$~GHz).
 
 
 
-\chapter{Excitation signal}
+
+
+\section{Excitation Signal}
 
 Before making any useful measurement, the parameters of the excitation signal must be chosen to match to the DUT parameters.The rms of the applied signal must indeed be determined to use the full range of the ADC while avoiding saturation of the system. The poles of the system must also be roughly known to determine the band of interest, making sure that the system's dynamics are measured.
 
 
 
-\section{Band of interest}
+\subsection{Band of Interest}
+\label{sec:Band_of_interest}
 
-% \begin{figure}[htbp]
-%     \centering
-%     \includegraphics[width=0.9\textwidth]{Pictures/outputSignal.png}
-%     \caption{Output signal in time (top) and frequency (bottom) domains. $f_s = 5$kHz}
-%     \label{fig:outputSignal}
-% \end{figure}
+To determine the sampling frequency, a multisine excited up to $40$~kHz has been applied to the DUT. Both input and output of the system are shown in the frequency domain in Fig.~\ref{fig:frequency_scan}.
 
-% The output signal is shown in Fig. \ref{fig:outputSignal}. The time domain plot shows that the output signal stays between $-4V$ and $4V$. To keep some margin, the range of the ADC has been put to $[-5; 5]V$. Even though the output in the frequency domain is not equivalent to the system's FRF, it gives a rough idea of it when the input signal's FFT is flat, which was the case here. It can therefore be seen that there is not much happening above $1.25 \text{kHz}$, which led to the choice of $5$kHz for the sampling frequency. The number of points in the excitation signal has been chosen to be $N = 5000$, which means every experiment takes $1$ second. Even though this means that the spectral resolution is of only $1$ Hz, it allows to have a relatively short measurement time.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/frequencyScan.png}
+    \caption{Excitation spectrum (top) and output spectrum (bottom).}
+    \label{fig:frequency_scan}
+\end{figure}
 
-To determine the band of interest, a multisine excited up to a high frequency must be applied (here $1$MHz). The spectral resolution of the signal is chosen to be small on order to improve the SNR and not miss any interesting behaviour which could be hidden by noise.
+The measured input spectrum is not flat because of the ZOH: the continuous signal is discretized by the \textit{PXI setup} and the hold operation is equivalent with a sinc filtering in frequency. This effect could be reduced with a higher sampling frequency.
 
-\Huge TODO \normalsize
+The output spectrum shows that the system's dynamics happen at frequencies below $\sim 1.25$~kHz. The excitation signals used will therefore stop at this frequency. To mitigate the effect of the ZOH, the sampling frequency is set to $5$~kHz.
 
-\section{Amplitude}
 
-\Huge TODO \normalsize
+\subsection{Amplitude}
 
-\section{Transient removal}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/outputSignal.png}
+    \caption{Excitation signal (left) and output signal (right).}
+    \label{fig:output_signal}
+\end{figure}
 
-Because only multisines can be applied, every measurement is done for multiple periods and the first ones are systematically removed until the transient is removed. To check this, the difference between each period is plotted, as shown in Fig. \ref{fig:transientRemoval} and periods are removed until the shown plot is reduced to a flat curve.
+The same signal as the one measured for Sec.~\ref{sec:Band_of_interest} but is shown in the time domain in Fig.~\ref{fig:output_signal}. It can be seen that the input signal don't go higher than $5$~V and the output signal doesn't cross $1$~V. This allowed to set the range of the ADCs of the \textit{PXI setup}.
+
+\subsection{Transient Removal}
+
+Because only multisines can be applied, every measurement is done for multiple periods and the first ones are systematically removed until the transient is removed. To check this, the difference between each period is plotted, as shown in Fig.~\ref{fig:transient_removal} and periods are removed until the shown plot is reduced to a flat curve.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\textwidth]{Pictures/transientRemoval.png}
-    \caption{Difference between $1^{\text{st}}$ and $2^{\text{nd}}$ periods of the output signal in time domain}
-    \label{fig:transientRemoval}
+    \includegraphics[width=0.48\textwidth]{Pictures/transientRemoval.png}
+    \caption{Difference between $1^{\text{st}}$ and $2^{\text{nd}}$ periods of the output signal in time domain.}
+    \label{fig:transient_removal}
 \end{figure}
 
 
@@ -57,14 +66,14 @@ Because only multisines can be applied, every measurement is done for multiple p
 
 
 
-\chapter{Nonlinear distortion and noise analysis}
+\section{Nonlinear Distortion and Noise Analysis}
 
-Two methods are used to distinguish the nonlinear distortions from the noise. The \textit{fast method} uses a single experiment and allows to split the output spectrum in linear, nonlinear and noise contributions. The \textit{robust method} uses multiple experiments and computes an estimate of the variances of nonlinear distortion and noise together with an non parametric estimate of the FRF.
-
-
+Two methods are used to distinguish the nonlinear distortions from the noise. The \textit{fast method} uses a single experiment and allows to split the output spectrum in linear, nonlinear and noise contributions. The \textit{robust method} uses multiple experiments and computes an estimate of the variances of nonlinear distortion and noise together with an nonparametric estimate of the FRF.
 
 
-\section{Fast method}
+
+
+\subsection{Fast Method}
 
 The excitation signal is an odd multisine with holes. This means that only odd frequencies are excited and some of those odd frequencies are also unexcited in order to have a measure for odd nonlinear distortions. During the excitation generation, 1 odd bin out of 4 is randomly chosen to be not excited. 
 
@@ -80,64 +89,64 @@ The spectrum of the output signal is then divided into 4 categories:
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\textwidth]{Pictures/fastMethod1.png}
-    \caption{Results of the fast method}
-    \label{fig:fastMethod1}
+    \includegraphics[width=0.48\textwidth]{Pictures/fastMethod1.png}
+    \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback}).}
+    \label{fig:fast_method}
 \end{figure}
 
-Fig. \ref{fig:fastMethod1} shows that even distortion is close to the noise level and therefore does not impact much the signal. Odd distortion on the other hand is quite high and is close to the level of the linear part near its peak.
+Fig.~\ref{fig:fast_method} shows that even distortion is close to the noise level and therefore does not impact much the signal. Odd distortion on the other hand is quite high and is close to the level of the linear part near its peak.
 
-This behaviour is explained by Eq. \ref{eq:NL feedback}: because the third power of the output is fed back to the input, it contains sinusoids at the sum of 3 frequencies of the output. As the output only contains odd frequencies, it results in another odd frequency and the main non linearities therefore appears at odd bins.
+This behavior is explained by~(\ref{eq:NL_feedback}): because the third power of the output is fed back to the input, it contains sinusoids at the sum of 3 frequencies of the output. As the output only contains odd frequencies, it results in another odd frequency and the main nonlinearities therefore appears at odd bins.
 
-    % ------------ ZOOMED IN VERSION OF ODD SYSTEM -------------
-            % \begin{figure}[H]
-            %     \centering
-            %     \includegraphics[width=0.9\textwidth]{Pictures/fastMethod2.png}
-            %     \caption{Zoomed in results of the fast method with an increased number of samples}
-            %     \label{fig:fastMethod2}
-            % \end{figure}
-
-            % The same method has been applied with more samples in Fig. \ref{fig:fastMethod2} to increase the spectral resolution and have a better view of even distortion, which is still present. It is there measured to be $10$ dBV above the noise level around $150$Hz, which is still below the odd distortion level.
-
-To validate this explanation, the same experiment has been applied to the system with this time as feedback:
+To validate this explanation, the same experiment has been applied to the system with this time as feedback
 \begin{equation}
-    y(t) = u^2(t)
-    \label{eq:NL feedback even}
+    y(t) = u^2(t),
+    \label{eq:NL_feedback_even}
 \end{equation}
 
-The feedback now excites even frequencies and will therefore have more even distortions than what is shown on Fig. \ref{fig:fastMethod1}.
+which gave the results shown in Fig.~\ref{fig:fast_method_even}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/fastMethodEven.png}
+    \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback_even}).}
+    \label{fig:fast_method_even}
+\end{figure}
+
+The feedback now excites even frequencies and therefore has more even distortions than the one of Fig.~\ref{fig:fast_method}.
 
 
 
 
+\subsection{Robust Method}
 
-\section{Robust method}
-
-This method relies on computing a FRF for each of the $P$ periods and the $M$ realizations. The variance across the periods for realization $m$ is called $\hat{\sigma}^{2 [m]}_n$ and is only due to noise. This is because the non linear contributions are deterministic and depend only on the input signal, which is the same for the whole realization.
+This method relies on computing a FRF for each of the $P$ periods and the $M$ realizations. The variance across the periods for realization $m$ is called $\hat{\sigma}^{2 [m]}_n$ and is only due to noise. This is because the nonlinear contributions are deterministic and depend only on the input signal, which is the same for the whole realization.
 \begin{equation}
     \hat{G}^{[m, p]} = \frac{Y^{[m, p]}}{U^{[m]}}
 \end{equation}
-\begin{equation}
-    \hat{G}^{[m]} = \frac{1}{P} \sum_{p=1}^P \hat{G}^{[m, p]} \hspace{2cm} \hat{\sigma}^{2 [m]}_n = \frac{1}{P(P-1)} \sum_{p=1}^{P} \left| \hat{G}^{[m, p]} - \hat{G}^{[m]}\right|^2
-\end{equation}
+\begin{gather}
+    \hat{G}^{[m]} = \frac{1}{P} \sum_{p=1}^P \hat{G}^{[m, p]}\\ 
+    \hat{\sigma}^{2 [m]}_n = \frac{1}{P(P-1)} \sum_{p=1}^{P} \left| \hat{G}^{[m, p]} - \hat{G}^{[m]}\right|^2
+\end{gather}
 
 These noise variances on a single realization $\hat{\sigma}^{2 [m]}_n$ are then averaged across the realizations and divided by M because the averaging reduces the variance. This gives the total noise variance $\sigma^2_n$.
 \begin{equation}
     \hat{\sigma}^2_n = \frac{1}{M^2} \sum_{m=1}^{M} \hat{\sigma}^{2 [m]}_n
 \end{equation}
 
-The averaged FRF of a single realization $\hat{G}^{[m]}$ doesn't contain noise (at least in expected value). But between realizations, they have different non linear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
-\begin{equation}
-    \hat{G}_{\text{ML}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]} \hspace{2cm} \hat{\sigma}_{\text{ML}} = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{ML}}\right|^2
-\end{equation}
+The averaged FRF of a single realization $\hat{G}^{[m]}$ doesn't contain noise (at least in expected value). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
+\begin{gather}
+    \hat{G}_{\text{ML}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]}\\
+    \hat{\sigma}_{\text{ML}} = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{ML}}\right|^2
+\end{gather}
 
-A full multisine (excited up to $1.25$kHz) has been applied to the DUT for $P=20$ periods and $M=20$ realizations. The results are shown on Fig. \ref{fig:robustMethod}.
+A full multisine (excited up to $1.25$~kHz as explained in Sec.~\ref{sec:Band_of_interest}) has been applied to the DUT for $P=20$ periods and $M=20$ realizations. The results are shown on Fig.~\ref{fig:robust_method}.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\textwidth]{Pictures/robustMethod.png}
-    \caption{Results of the robust method}
-    \label{fig:robustMethod}
+    \includegraphics[width=0.48\textwidth]{Pictures/robustMethod.png}
+    \caption{Results of the robust method, with the FRF estimate (top) and the estimated variances (bottom).}
+    \label{fig:robust_method}
 \end{figure}
 
 
@@ -152,69 +161,67 @@ A full multisine (excited up to $1.25$kHz) has been applied to the DUT for $P=20
 
 
 
-\chapter{Best linear approximation}
+\section{Best Linear Approximation}
 
 A linearized model of the system can be determined to approximate the DUT as an LTI. The best linear approximation, or BLA, is therefore computed as the "best fit". Because nonlinear distortions are dependent on the input signal, the BLA computed here is valid for excitation signals with a similar \textit{Riemann equivalent spectrum}. 
 
 
 
 
-\section{Non parametric model}
-\label{sec:nonParametricModel}
+\subsection{Nonparametric Model}
+\label{sec:non_parametric_model}
 
-The result of the robust method shown in Fig. \ref{fig:robustMethod} is, in fact, an estimated BLA and it already comes with its uncertainty. Because of the successive averaging, it should be able to remove noise and nonlinear distortions which are zero-mean \footnote{It is only true in expected value so it can only be approached using a discrete number of periods and realizations}.
-
-
+The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fact, an estimated BLA and it already comes with its uncertainty. Because of the successive averaging, it should be able to remove noise and nonlinear distortions which are zero-mean\footnote{It is only true in expected value so it can only be approached using a discrete number of periods and realizations}.
 
 
-\section{Parametric model}
 
-Based on the non parametric model of Sec. \ref{sec:nonParametricModel}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ such that:
+
+\subsection{Parametric Model}
+
+Based on the nonparametric model of Sec. \ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ giving the following expression
 
 \begin{equation}
-    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\sum_{k=0}^{n_a} a_k s^k}
-    \label{eq:TFgeneralForm}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\sum_{k=0}^{n_a} a_k s^k}.
+    \label{eq:TF_general_form}
 \end{equation}
 
 Different estimators are used but first, a few tricks are used for each of them and those are explained here.
 
-\paragraph{Normalization by rms scaling:} Each estimator has a regressor matrix ($H$ or $J$), whose columns often have different orders of magnitude. This results in a poor conditioning and gives numerical errors. To resolve this, a change of coordinates is applied with the scaling matrix $S$, which scales the columns. The original coordinates $H$ (or $J$) and $\theta$ are replaced by $\tilde{H}$ (or $\tilde{J}$) and $\tilde{\theta}$:
-
-\textbf{For LLS}
+\paragraph{Normalization by rms scaling} Each estimator has a regressor matrix ($H$ or $J$), whose columns often have different orders of magnitude. This results in a poor conditioning and gives numerical errors. To resolve this, a change of coordinates is applied with the scaling matrix $S$, which scales the columns. The original coordinates $H$ (or $J$) and $\theta$ are replaced by $\tilde{H}$ (or $\tilde{J}$) and $\tilde{\theta}$.
+\begin{gather}
+    y = H \times \theta \\
+    \Rightarrow y = \tilde{H} \times \tilde{\theta} \qquad \text{with} \qquad \tilde{H} = H \times S
+\end{gather}
 \vspace{-0.8cm}
 \begin{align}
-    y = H \times \theta \hspace{1cm} &\Rightarrow \hspace{1cm} y = \tilde{H} \times \tilde{\theta} \hspace{2cm} \text{with} \hspace{0.5cm} \tilde{H} = H \times S\\
-    &\Leftrightarrow \hspace{1cm} \tilde{\theta} = S^{-1} \times \theta\\
-    &\Leftrightarrow \hspace{1cm} \theta = S \times \tilde{\theta}
+    &\Leftrightarrow \tilde{\theta} = S^{-1} \times \theta\\
+    &\Leftrightarrow \theta = S \times \tilde{\theta}
 \end{align}
-\begin{list}{}{\leftmargin=2em}
-\item $S$ has been chosen to be a diagonal matrix with as elements the inverse of the rms of the columns of $H$, such that it is invertible:
-\end{list}
+$S$ has been chosen to be a diagonal matrix with as elements the inverse of the rms of the columns of $H$, such that it is invertible
 \begin{equation}
-S = \operatorname{diag}\!\left( \frac{1}{\mathrm{rms}\bigl(H_{:,1}\bigr)}, \dots, \frac{1}{\mathrm{rms}\bigl(H_{:,n}\bigr)} \right)
+S = \operatorname{diag}\!\left( \frac{1}{\mathrm{rms}\bigl(H_{:,1}\bigr)}, \dots, \frac{1}{\mathrm{rms}\bigl(H_{:,n}\bigr)} \right).
 \end{equation}
 
-\textbf{For TLS}
-\begin{list}{}{\leftmargin=2em}
-\item The exact same thing is applied, except $y$ is now called $e$ and $H$ becomes $J$.
-\end{list}
-
-\paragraph{Use of the non parametric estimate:} All the estimators are relying on approaching the following, which arises from the definition of a transfer function:
+\paragraph{Use of the nonparametric estimate} All the estimators are relying on approaching the following, which arises from the definition of a transfer function. The key idea is to notice that because
 \begin{equation}
-    Y(k) = G(j \omega_k) \times U(k)
+    Y(k) = G(j \omega_k) \times U(k),
 \end{equation}
-The key idea is to notice that
+a clever choice of $U$ simplifies the choice of $Y$, as
 \begin{equation}
-    U(k) = 1 \hspace{0.5cm} \forall k \hspace{1cm} \Rightarrow \hspace{1cm} Y(k) = G(j \omega_k)
+    U(k) = 1 \quad \forall k \quad \Rightarrow \quad Y(k) = G(j \omega_k).
 \end{equation}
 
-\paragraph{Forcing real valued parameters:} A real system is described by real coefficients so the imaginary part of $\theta$ must be equal to $0$
-
-\textbf{For LLS and TLS (replacing H by J)}
+\paragraph{Forcing real valued parameters} A real system is described by real coefficients so the imaginary part of $\theta$ must be equal to $0$. The regressor must therefore be changed.
+\begin{equation}
+    y = H \times \theta
+\end{equation}
 \vspace{-0.8cm}
-\begin{align}
-    y = H \times \theta \hspace{1cm} &\Rightarrow \hspace{1cm} \Re\left\{y\right\} + j \Im\left\{y\right\} = \Big(\Re\left\{H\right\} + j \Im\left\{H\right\}\Big) \times \Big(\Re\left\{\theta\right\} + j \Im\left\{\theta\right\}\Big)\\
-    &\Leftrightarrow \hspace{1cm} \begin{bmatrix}
+\begin{multline}
+    \Rightarrow \quad \Re\left\{y\right\} + j \Im\left\{y\right\} = \Big(\Re\left\{H\right\} + j \Im\left\{H\right\}\Big) \\
+    {} \times \Big(\Re\left\{\theta\right\} + j \Im\left\{\theta\right\}\Big)
+\end{multline}
+\begin{equation}
+    \Leftrightarrow \quad \begin{bmatrix}
         \Re\left\{y\right\}\\
         \Im\left\{y\right\}
     \end{bmatrix} = \begin{bmatrix}
@@ -224,10 +231,8 @@ The key idea is to notice that
         \Re\left\{\theta\right\}\\
         \Im\left\{\theta\right\}
     \end{bmatrix}
-\end{align}
-\begin{list}{}{\leftmargin=2em}
-\item And because $\Im\left\{\theta\right\} = 0$, it becomes:
-\end{list}
+\end{equation}
+And because $\Im\left\{\theta\right\} = 0$, it becomes
 \begin{equation}
     \begin{bmatrix}
         \Re\left\{y\right\}\\
@@ -235,52 +240,51 @@ The key idea is to notice that
     \end{bmatrix} = \begin{bmatrix}
         \Re\left\{H\right\}\\
         \Im\left\{H\right\}
-    \end{bmatrix} \times \Re\left\{\theta\right\}
+    \end{bmatrix} \times \Re\left\{\theta\right\}.
 \end{equation}
-\begin{list}{}{\leftmargin=2em}
-\item Thus $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$.
-\end{list}
+Thus $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$.
 
-\textbf{For GTLS}
-\begin{list}{}{\leftmargin=2em}
-\item As explained later on, the GTLS estimator needs the covariance matrix $C_J = \mathbb{E} \left\{\Delta J^H \Delta J\right\}$, with $J = J_0 + \Delta J$. It must be adapted because J has become $J_{\text{re}}$.
-\end{list}
-\vspace{-0.8cm}
-\begin{align}
+As explained later on, the GTLS estimator needs a covariance matrix $C_J$ that depends on $J$. Because $J$ has become $J_{\text{re}}$, $C_{J_{\text{re}}}$ must be derived. starting from
+\begin{equation}
     \Delta J_{\text{re}} = \begin{bmatrix}
         \Re\left\{\Delta J\right\}\\
         \Im\left\{\Delta J\right\}
-    \end{bmatrix} \hspace{1cm} \Rightarrow \hspace{1cm} C_{J_{\text{re}}} &= \mathbb{E} \left\{ \begin{bmatrix} 
-        \Re\left\{\Delta J\right\}^T & \Im\left\{\Delta J\right\}^T
-        \end{bmatrix} \times \begin{bmatrix} 
-        \Re\left\{\Delta J\right\}\\
-        \Im\left\{\Delta J\right\}
-        \end{bmatrix}
-        \right\}\\
-    &= \mathbb{E} \Big\{ \Re\left\{\Delta J\right\}^T \times \Re\left\{\Delta J\right\} \Big\} + \mathbb{E} \Big\{ \Im\left\{\Delta J\right\}^T \times \Im\left\{\Delta J\right\} \Big\}
+    \end{bmatrix}
+    \quad \text{and} \quad C_J = \mathbb{E} \Big\{ \Delta J^H \Delta J \Big\},
+\end{equation}
+The covariance matrix for a real parameters estimator is
+\begin{align}
+    C_{J_{\text{re}}} &= \mathbb{E}\Bigg\{
+    \begin{bmatrix}
+        \Re\{\Delta J\}^T & \Im\{\Delta J\}^T
+    \end{bmatrix}
+    \begin{bmatrix}
+        \Re\{\Delta J\} \\
+        \Im\{\Delta J\}
+    \end{bmatrix}
+    \Bigg\}\\
+    &= \mathbb{E}\Big\{ \Re\{\Delta J\}^T \Re\{\Delta J\} \Big\} + \mathbb{E}\Big\{ \Im\{\Delta J\}^T \Im\{\Delta J\} \Big\}.
     \label{eq:C_Jre1}
 \end{align}
-\begin{list}{}{\leftmargin=2em}
-\item By splitting the real and the imaginary part of $\Delta J$, $C_J$ can be computed as follows:
-\end{list}
+By splitting the real and the imaginary part of $\Delta J$, $C_J$ can be computed as follows.
 \begin{equation}
-    \begin{aligned}
-        \Delta J = \Re\left\{\Delta J\right\} + j \Im\left\{\Delta J\right\} \hspace{1cm} \Rightarrow \hspace{1cm} C_J
-        &= \mathbb{E} \Big\{ \Re\left\{\Delta J\right\}^T \Re\left\{\Delta J\right\} \Big\}
-        + \mathbb{E} \Big\{ \Im\left\{\Delta J\right\}^T \Im\left\{\Delta J\right\} \Big\} \\
-        &\quad + j \Big(
-        \mathbb{E} \left\{ \Re\left\{\Delta J\right\}^T \Im\left\{\Delta J\right\} \right\}
+    \Delta J = \Re\left\{\Delta J\right\} + j \Im\left\{\Delta J\right\}
+\end{equation}
+\vspace{-0.7cm}
+\begin{multline}
+    \Rightarrow \quad C_J = \mathbb{E} \Big\{ \Re\left\{\Delta J\right\}^T \Re\left\{\Delta J\right\} \Big\}\\
+        + \mathbb{E} \Big\{ \Im\left\{\Delta J\right\}^T \Im\left\{\Delta J\right\} \Big\}
+        + j \Big(
+        \mathbb{E} \left\{ \Re\left\{\Delta J\right\}^T \Im\left\{\Delta J\right\} \right\}\\
         - \mathbb{E} \left\{ \Im\left\{\Delta J\right\}^T \Re\left\{\Delta J\right\} \right\}
         \Big)
-    \end{aligned}
-\label{eq:C_Jre2}
-\end{equation}
-\begin{list}{}{\leftmargin=2em}
-\item By comparing Eq. \ref{eq:C_Jre1} with Eq. \ref{eq:C_Jre2}, it can be seen that:
-\end{list}
+    \label{eq:C_Jre2}
+\end{multline}
+Finally, by comparing~(\ref{eq:C_Jre1}) with~(\ref{eq:C_Jre2}), it is found that
 \begin{equation}
-    C_{J_{\text{re}}} = \Re \Big\{ C_J \Big\}
+    C_{J_{\text{re}}} = \Re \Big\{ C_J \Big\}.
 \end{equation}
+
 
 
 
@@ -307,6 +311,7 @@ The key idea is to notice that
 % \begin{equation}    
 %     J = J_0 + \Delta J \hspace{2cm} C_J = \mathbb{E} \left\{\Delta J^H \Delta J\right\}
 % \end{equation}
+
 
 
 

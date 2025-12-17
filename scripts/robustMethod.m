@@ -84,7 +84,7 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs, showPlot)
         figure;
         subplot(211);
         plot(f, db(G_ML), 'o', 'LineWidth', 2);
-        title('Robust Method FRF Estimate');
+        %title('Robust Method FRF Estimate');
         xlabel('Frequency [Hz]');
         ylabel('|FRF| [dB]');
         xlim([1/fs fs/4]);
@@ -95,7 +95,7 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs, showPlot)
         plot(f, db(noise_var), 'r', 'LineWidth', 2);
         plot(f, db(distortion_var), 'b', 'LineWidth', 2);
         plot(f, db(total_var), 'g', 'LineWidth', 2);
-        title('Variance Estimates');
+        %title('Variance Estimates');
         xlabel('Frequency [Hz]');
         ylabel('Variance [dBV^2]');
         xlim([1/fs fs/4]);

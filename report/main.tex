@@ -1,12 +1,12 @@
-\documentclass{ULBreport}
+\documentclass[journal]{IEEEtran}
 
-\sceau{Pictures/official_logos/sceauULB.png}
-
+\usepackage[backend=biber,citestyle=alphabetic,bibstyle=authoryear]{biblatex}
 \addbibresource{biblio.bib}
 
 \input{common/packages}
 
-\makeglossaries
+% Remove makeglossaries since no glossary is being printed
+%\makeglossaries
 
 % \newglossaryentry{strip mining}
 % {
@@ -14,47 +14,15 @@
 %   description={is the practice of mining a seam of mineral, by first removing a long strip of overlying soil and rock}
 % }
 
-
-
 % \newacronym{t}{t}{tons}
-
-
 
 \begin{document}
 
-\makeatletter
-% Don't start a new page at each chapter
-\def\@makechapterhead#1{%
-  {\parindent 0pt \raggedright \normalfont
-   \ifnum \c@secnumdepth >\m@ne
-     \Large\bfseries \thechapter.\ %
-   \fi
-   #1\par\nobreak\vskip 10pt}}
-\def\@makeschapterhead#1{%
-  {\parindent 0pt \raggedright \normalfont
-   \Large\bfseries #1\par\nobreak\vskip 10pt}}
-\makeatother
+\title{Project - LTI identification}
 
-% Redefine \chapter to avoid forcing a page break before chapters.
-% The default \chapter issues a \clearpage or \cleardoublepage; this
-% redefinition removes that so chapters start immediately where placed.
-\makeatletter
-\renewcommand\chapter{%
-  \global\@topnum\z@%
-  \@afterindentfalse%
-  \secdef\@chapter\@schapter%
-}
-\makeatother
+\author{Emmeran~COLOT}
 
-
-\titleULB{
-	title={Project - LTI identification},
-	course={Identification of Dynamical Systems},
-	author={Emmeran COLOT},
-	date={2025-2026},
-	teacher={Prof. J. Lataire},
-	logo={Pictures/official_logos/logos.jpg}
-}
+\maketitle
 
 %\listoftables % ToC for tables
 
@@ -68,6 +36,6 @@
 
 %Bibliography
 \nocite{*}
-\printbibliography[type=article,title=Articles]
+\printbibliography
 
 \end{document}

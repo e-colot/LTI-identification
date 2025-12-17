@@ -1,21 +1,29 @@
-function [] = fastMethod(dataFile, fs)
-% fastMethod(dataFile, fs)
+function [] = fastMethod(dataFile, fs, periodsTaken)
+% fastMethod(dataFile, fs, [periodsTaken])
 %
 % Computes the FRF estimate using the fast method.
 % Based on a single realization, the fft bins of the output signal spectrum are split in linear contribution, even nonlinear distortion, odd nonlinear distortion and noise bins. 
-%
+% periodsTaken allows to limit the number of periods taken
 
     %% Load data
-    [u, y, sel, sig, ~, ~] = acquisition(dataFile);
+    [~, y, sel, sig, ~, ~] = acquisition(dataFile);
 
-    N = size(u, 1);
+    N = size(y, 1);
     periodN = size(sig, 1); % number of samples of the original period
     repNumber = N / periodN; % number of periods in the acquired signal
+
+    if (nargin > 2 && repNumber > (periodsTaken+1))
+          % periodsTaken+1 because 1 period is removed due to transient
+        repNumber = periodsTaken+1;
+        N = repNumber * periodN;
+        y = y(size(y, 1)-N+1:end, :, :);
+    end
+
 
     %% Remove transient
         % visualization
         figure;
-        plot(db(y(1:periodN, 1, 1) - y(periodN + 1:2*periodN, 1, 1)), "LineWidth", 2);
+        plot(db(y(1:periodN, 1, 1) - y(periodN+1:2*periodN, 1, 1)), "LineWidth", 2);
         xlabel('Sample');
         ylabel('Amplitude [dBV]');
         grid on;
@@ -49,7 +57,7 @@ function [] = fastMethod(dataFile, fs)
 
         figure; 
         for itr = 1:4
-            plot(f(indices{itr}), db(abs(Y(indices{itr}, 1))), 'o', 'Color', colors{itr}, 'LineWidth', 2); 
+            plot(f(indices{itr}), db(abs(Y(indices{itr}, 1))), 'o', 'Color', colors{itr}, 'LineWidth', 1); 
             hold on;
         end
         

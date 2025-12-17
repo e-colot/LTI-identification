@@ -4,7 +4,7 @@ folderPath = '../excitations/';
 signalNameOdd = 'oddM';
 signalNameFull = 'fullM';
 
-%% RMS + band of interest determination
+%% fast and robust method
 
 desiredRMS = 0.1;
 N = 25e3;
