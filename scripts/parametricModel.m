@@ -78,3 +78,73 @@ save("../results/parametricWorkspace.mat");
         ylabel('FRF Phase [rad]');
         xlim([f(1) f(end)]);
 
+    % model orders on a plot
+    figure;
+    hold on;
+    plot(Na_optLLS, Nb_optLLS, 'o', MarkerSize=8, DisplayName='LLS', LineWidth=2);
+    plot(Na_optTLS, Nb_optTLS, 's', MarkerSize=8, DisplayName='TLS', LineWidth=2);
+    plot(Na_optGTLS, Nb_optGTLS, '^', MarkerSize=8, DisplayName='GTLS', LineWidth=2);
+    plot(Na_optBTLS, Nb_optBTLS, 'd', MarkerSize=8, DisplayName='BTLS', LineWidth=2);
+    plot(Na_optML, Nb_optML, 'v', MarkerSize=8, DisplayName='ML', LineWidth=2);
+    plot([0 16], [0 16], 'r--','HandleVisibility','off');
+    xlabel('Optimal Model Order n_a');
+    ylabel('Optimal Model Order n_b');
+    legend('Location', 'best');
+    grid on;
+    xlim([0 16]);
+    ylim([0 16]);
+
+        % poles and zeros on plots
+    figure;
+    hold on;
+    poles_LLS = roots(A_optLLS);
+    zeros_LLS = roots(B_optLLS);
+    colors = lines(5);
+    
+    plot(real(poles_LLS), imag(poles_LLS), 'x', MarkerSize=8, DisplayName='LLS poles', LineWidth=2, Color=colors(1,:));
+    plot(real(zeros_LLS), imag(zeros_LLS), 'o', MarkerSize=8, DisplayName='LLS zeros', LineWidth=2, Color=colors(1,:));
+
+    poles_TLS = roots(A_optTLS);
+    zeros_TLS = roots(B_optTLS);
+    plot(real(poles_TLS), imag(poles_TLS), 'x', MarkerSize=8, DisplayName='TLS poles', LineWidth=2, Color=colors(2,:));
+    plot(real(zeros_TLS), imag(zeros_TLS), 'o', MarkerSize=8, DisplayName='TLS zeros', LineWidth=2, Color=colors(2,:));
+
+    xline(0, 'k--', 'HandleVisibility', 'off');
+    xlabel('Real');
+    ylabel('Imaginary');
+    legend('Location', 'best');
+    grid on;
+    %title('LLS and TLS');
+
+    figure;
+    hold on;
+    poles_GTLS = roots(A_optGTLS);
+    zeros_GTLS = roots(B_optGTLS);
+    plot(real(poles_GTLS), imag(poles_GTLS), 'x', MarkerSize=8, DisplayName='GTLS poles', LineWidth=2, Color=colors(3,:));
+    plot(real(zeros_GTLS), imag(zeros_GTLS), 'o', MarkerSize=8, DisplayName='GTLS zeros', LineWidth=2, Color=colors(3,:));
+
+    poles_BTLS = roots(A_optBTLS);
+    zeros_BTLS = roots(B_optBTLS);
+    plot(real(poles_BTLS), imag(poles_BTLS), 'x', MarkerSize=8, DisplayName='BTLS poles', LineWidth=2, Color=colors(4,:));
+    plot(real(zeros_BTLS), imag(zeros_BTLS), 'o', MarkerSize=8, DisplayName='BTLS zeros', LineWidth=2, Color=colors(4,:));
+
+    poles_ML = roots(A_optML);
+    zeros_ML = roots(B_optML);
+    plot(real(poles_ML), imag(poles_ML), 'x', MarkerSize=8, DisplayName='ML poles', LineWidth=2, Color=colors(5,:));
+    plot(real(zeros_ML), imag(zeros_ML), 'o', MarkerSize=8, DisplayName='ML zeros', LineWidth=2, Color=colors(5,:));
+
+    xline(0, 'k--', 'HandleVisibility', 'off');
+    xlabel('Real');
+    ylabel('Imaginary');
+    legend('Location', 'best');
+    grid on;
+    %title('GTLS, BTLS, and ML');
+
+%% Stability check
+
+    fprintf('Number of poles with real part >= 0:\n');
+    fprintf('LLS: %d\n', sum(real(poles_LLS) >= 0));
+    fprintf('TLS: %d\n', sum(real(poles_TLS) >= 0));
+    fprintf('GTLS: %d\n', sum(real(poles_GTLS) >= 0));
+    fprintf('BTLS: %d\n', sum(real(poles_BTLS) >= 0));
+    fprintf('ML: %d\n', sum(real(poles_ML) >= 0));

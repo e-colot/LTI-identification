@@ -399,6 +399,7 @@ The estimators described in Sec.~\ref{sec:parametric_model} require a model orde
 The AIC criterion is therefore used. It depends on the cost of the estimator $V_{\text{est}}$ and the order of the model, giving an \textit{AIC cost}, given by
 \begin{equation}
     V_{\text{AIC}} = V_{\text{est}} \Bigg( 1 + \frac{n_a + n_b}{N_e} \Bigg).
+    \label{eq:AIC_cost}
 \end{equation}
 This is computed for various values of $n_a$ and $n_b$ and the optimal order is the one with the smallest \textit{AIC cost}.
 
@@ -406,7 +407,7 @@ The values of the order are restricted to transfer functions with more poles tha
 
 \section{Results}
 
-The AIC criterion described in Sec.~\ref{sec:AIC} has been applied to every estimator of Sec.~\ref{sec:parametric_model} and it gives for each of them a 3D plot like the one shown in Fig.~\ref{fig:AIC_3D}.
+The AIC criterion described in Sec.~\ref{sec:AIC} has been applied\footnote{for $n_a$ and $n_b$ going up to $15$.} to every estimator of Sec.~\ref{sec:parametric_model} and it gives for each of them a 3D plot like the one shown in Fig.~\ref{fig:AIC_3D}.
 
 \begin{figure}
     \centering
@@ -415,13 +416,51 @@ The AIC criterion described in Sec.~\ref{sec:AIC} has been applied to every esti
     \label{fig:AIC_3D}
 \end{figure}
 
-The resulting FRFs are plotted in Fig.~\ref{fig:EstimatedFRF}. It can be seen that the LLS and TLS estimators have \textit{bumps} where poles and zeros nearly cancel each other's. The three last estimators (GTLS, BTLS and ML) superpose perfectly, making them undistinguishable on the graph.
+The resulting FRFs are plotted in Fig.~\ref{fig:estimated_FRF}. It can be seen that the LLS and TLS estimators have \textit{bumps} where poles and zeros nearly cancel each other's. The three last estimators (GTLS, BTLS and ML) superpose perfectly, making them undistinguishable on the graph.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/EstimatedFRF.png}
     \caption{Superposition of the estimated parametric FRFs amplitude (top) and phase (bottom), together with the nonparametric estimate.}
-    \label{fig:EstimatedFRF}
+    \label{fig:estimated_FRF}
 \end{figure}
+
+Fig.~\ref{fig:optimal_order} shows the optimal order that minimizes the AIC cost~(\ref{eq:AIC_cost}). A few observations can be made:
+\begin{itemize}
+    \item The LLS and TLS estimators both have a high number of parameters and Fig.~\ref{fig:rlocus1} confirms the hypothesis of imperfect pole-zero cancellations.
+    \item GTLS has a more intermediate number of parameters.
+    \item BTLS and ML estimators use a really low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/optimalOrder.png}
+    \caption{Optimal orders for each estimator, according to the AIC criterion. The red dashed line is the stability limit $n_a = n_b$}
+    \label{fig:optimal_order}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/rlocus1.png}
+    \caption{Poles and zeros of the LLS and TLS estimators}
+    \label{fig:rlocus1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/rlocus2.png}
+    \caption{Poles and zeros of the GTLS, BTLS and ML estimators}
+    \label{fig:rlocus2}
+\end{figure}
+
+Finally, the poles and zeros of the other estimator are shown in Fig.~\ref{fig:rlocus2}. It is here clearly visible that the GTLS estimator has poles in the right half-plane at high frequency, meaning the resulting system is unstable. Every estimator has poles with a positive real part but those of the ML and BTLS estimators are around $20$~Hz, which is by far \textit{less unstable} than the ones above $800$~Hz of the GTLS.
+
+
+
+
+
+
+
+
 
 
