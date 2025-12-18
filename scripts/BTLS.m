@@ -18,23 +18,25 @@ s = 1j*2*pi*f;
 % taking U = 1 and Y = G_BLA
 
   % placing s in the matrix J
-    J0 = repmat(1j*2*pi*f, 1, Na+Nb+2);
+    J0 = repmat(s, 1, Na+Nb+2);
     J0 = J0.^([(0:Na) (0:Nb)]);
   % placing G_BLA in the matrix
     J0 = J0.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
 
 
 % C_J = column covariance of DeltaJ
-    deltaH0 = zeros(length(f), Na+Nb+2);
-    deltaH0(:, 1:Na+1) = repmat(-1j*2*pi*f, 1, Na+1).^(0:Na);
+    DeltaJ0 = zeros(length(f), Na+Nb+2);
+    DeltaJ0(:, 1:Na+1) = repmat(s, 1, Na+1).^(0:Na);
 
     for itr = 1:itrMax
 
 %% -------- Computation of the weight W ---------
         oldTheta = theta0;
 
-        Aprev = oldTheta(1:Na+1);
-        var_e = (Aprev'*Aprev) * G_var;
+        Aprev = polyval(flipud(oldTheta(1:Na+1)), s);
+        Aprev = diag(Aprev);
+
+        var_e = abs(Aprev).^2 * G_var;
         W = diag(var_e.^(-r));
 
 %% ------------ Building J ---------------------
@@ -53,11 +55,11 @@ s = 1j*2*pi*f;
 
 %% ------------ Building C_J^0.5 ---------------------
 
-        deltaH = deltaH0 * S;
-        deltaH = W * deltaH;
-        deltaH = deltaH .* repmat(sqrt(G_var), 1, Na+Nb+2);
+        DeltaJ = DeltaJ0 * S;
+        DeltaJ = W * DeltaJ;
+        DeltaJ = DeltaJ .* repmat(sqrt(G_var), 1, Na+Nb+2);
     
-        C_J = deltaH' * deltaH;
+        C_J = DeltaJ' * DeltaJ;
         
       % To impose real parameters
         C_J = real(C_J);
@@ -88,8 +90,8 @@ s = 1j*2*pi*f;
         err = G_BLA-G_est;
 
         cost = sum(abs(err).^2 ./ (var_e.^r));
-        if (abs(cost - prevCost) < 1e-20)
-            % disp(['BTLS stopped after ', num2str(itr), ' iterations due to convergence']);
+        if (cost >= prevCost)
+            disp(['BTLS stopped after ', num2str(itr), ' iterations due to convergence']);
             return
         end
         prevCost = cost;

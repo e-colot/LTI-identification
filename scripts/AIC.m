@@ -45,30 +45,21 @@ function [Na_opt, Nb_opt, A_opt, B_opt] = AIC(estimator, NaList, NbList, Ne)
 
     % ---- 3-D Visualization ----
     [Nb_grid, Na_grid] = meshgrid(NbList, NaList);
-    logAIC = log10(AIC_map);
+    AICdb = db(AIC_map);
 
     figure;
-    surf(Nb_grid, Na_grid, logAIC, 'EdgeColor', 'none');
+    surf(Nb_grid, Na_grid, AICdb, 'EdgeColor', 'none');
     xlabel('Numerator order');
     ylabel('Denominator order');
-    zlabel('log_{10}(AIC cost)');
-    title('AIC surface');
+    zlabel('AIC cost [dB]');
+    %title('AIC surface');
     colorbar;
     view(135, 30);
     grid on;
     hold on;
 
-    % ---- Vertical line at optimum ----
-    z_min = min(logAIC(:), [], 'omitnan');
-    z_opt = log10(cost_opt);
-
-    plot3([Nb_opt Nb_opt], ...
-          [Na_opt Na_opt], ...
-          [z_min z_opt], ...
-          'r', 'LineWidth', 3);
-
     % Mark optimum point
-    plot3(Nb_opt, Na_opt, z_opt, ...
+    plot3(Nb_opt, Na_opt, db(cost_opt), ...
           'ro', 'MarkerSize', 8, 'LineWidth', 2);
 
 end

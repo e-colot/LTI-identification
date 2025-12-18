@@ -10,6 +10,8 @@ The objective will be to identify the linear part of the system and to have a me
 
 The measurement device (referred to as the \textit{PXI setup}) allows to send only multisines and their RMS value cannot exceed $1$~V. Its ADCs have a range that can be chosen and can sample at high frequencies ($> 1$~GHz).
 
+This report deliberately focusses on the theoretical points and the results rather than the implementation because the Matlab scripts and the measured data are available on GitHub\footnote{https://github.com/e-colot/LTI-identification}. 
+
 
 
 
@@ -46,13 +48,13 @@ The output spectrum shows that the system's dynamics happen at frequencies below
     \label{fig:output_signal}
 \end{figure}
 
-The same signal as the one measured for Sec.~\ref{sec:Band_of_interest} but is shown in the time domain in Fig.~\ref{fig:output_signal}. It can be seen that the input signal don't go higher than $5$~V and the output signal doesn't cross $1$~V. This allowed to set the range of the ADCs of the \textit{PXI setup}.
+The same signal as the one measured for Sec.~\ref{sec:Band_of_interest} but is shown in the time domain in Fig.~\ref{fig:output_signal}. It can be seen that the input signal do not go higher than $5$~V and the output voltage does not cross $1$~V. This allowed to set the range of the ADCs of the \textit{PXI setup}.
 
 \subsection{Transient Removal}
 
 Because only multisines can be applied, every measurement is done for multiple periods and the first ones are systematically removed until the transient is removed. To check this, the difference between each period is plotted, as shown in Fig.~\ref{fig:transient_removal} and periods are removed until the shown plot is reduced to a flat curve.
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/transientRemoval.png}
     \caption{Difference between $1^{\text{st}}$ and $2^{\text{nd}}$ periods of the output signal in time domain.}
@@ -68,7 +70,7 @@ Because only multisines can be applied, every measurement is done for multiple p
 
 \section{Nonlinear Distortion and Noise Analysis}
 
-Two methods are used to distinguish the nonlinear distortions from the noise. The \textit{fast method} uses a single experiment and allows to split the output spectrum in linear, nonlinear and noise contributions. The \textit{robust method} uses multiple experiments and computes an estimate of the variances of nonlinear distortion and noise together with an nonparametric estimate of the FRF.
+Two methods are used to distinguish the nonlinear distortions from the noise. The \textit{fast method} uses a single experiment and allows to split the output spectrum in linear, nonlinear and noise contributions. The \textit{robust method} uses multiple experiments and computes an estimate of the variances of nonlinear distortion and noise together with an nonparametric estimate of the frequency response function (FRF).
 
 
 
@@ -87,7 +89,7 @@ The spectrum of the output signal is then divided into 4 categories:
     \item \textbf{Noise}, for bins that are added by the multiple periods.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/fastMethod1.png}
     \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback}).}
@@ -106,7 +108,7 @@ To validate this explanation, the same experiment has been applied to the system
 
 which gave the results shown in Fig.~\ref{fig:fast_method_even}.
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/fastMethodEven.png}
     \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback_even}).}
@@ -134,7 +136,7 @@ These noise variances on a single realization $\hat{\sigma}^{2 [m]}_n$ are then 
     \hat{\sigma}^2_n = \frac{1}{M^2} \sum_{m=1}^{M} \hat{\sigma}^{2 [m]}_n
 \end{equation}
 
-The averaged FRF of a single realization $\hat{G}^{[m]}$ doesn't contain noise (at least in expected value). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
+The averaged FRF of a single realization $\hat{G}^{[m]}$ does not contain noise (at least in expected value). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
 \begin{gather}
     \hat{G}_{\text{ML}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]}\\
     \hat{\sigma}_{\text{ML}} = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{ML}}\right|^2
@@ -142,7 +144,7 @@ The averaged FRF of a single realization $\hat{G}^{[m]}$ doesn't contain noise (
 
 A full multisine (excited up to $1.25$~kHz as explained in Sec.~\ref{sec:Band_of_interest}) has been applied to the DUT for $P=20$ periods and $M=20$ realizations. The results are shown on Fig.~\ref{fig:robust_method}.
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/robustMethod.png}
     \caption{Results of the robust method, with the FRF estimate (top) and the estimated variances (bottom).}
@@ -177,6 +179,7 @@ The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fac
 
 
 \subsection{Parametric Model}
+\label{sec:parametric_model}
 
 Based on the nonparametric model of Sec.~\ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ giving the following expression
 
@@ -313,7 +316,7 @@ It minimizes the same cost function
 \begin{equation}
     V_{\text{TLS}} = \sum_{k} |E(k)|^2,
 \end{equation}
-but there is another constraint which doesn't require $a_0$ to be different from $0$, given by
+but there is another constraint which does not require $a_0$ to be different from $0$, given by
 \begin{equation}
     ||\theta_{\text{TLS}}||_2^2 = 1.
 \end{equation}
@@ -360,11 +363,65 @@ In practice, it is the same as a GTLS estimator where
 \end{equation}
 with
 \begin{equation}
-    W = \text{diag} \sigma_e^{-r}.
+    W = \text{diag}\Big(\sigma_e^{-r}\Big).
 \end{equation}
-The parameter $r$ is then chosen in $[0; 1]$ where a value close to $0$ corresponds to the GTLS estimator.
+The parameter $r$ is chosen in $[0; 1]$ where a value close to $0$ corresponds to the GTLS estimator. It is then applied iteratively until the new cost is greater or equal to the previous one.
 
+\subsubsection{Maximum Likelyhood Estimator (ML)}
 
+This estimator maximizes the probability that the parameters $\theta_{\text{ML}}$ generated the measured data, and is therefore mathematically the best. It is however nonlinear and must be solved iteratively, just as for the BTLS. Its cost function is
+\begin{equation}
+    V_{\text{ML}} = \frac{1}{2} \sum_k \frac{|e(j \omega_k, \theta_{\text{ML}})|^2}{\sigma_e^2(j \omega_k, \theta_{\text{ML}})}
+\end{equation}
+and the parameter update $\Delta \theta$ is given by
+\begin{equation}
+    \Delta \theta = -J^\dagger \epsilon,
+    \label{eq:ML_update}
+\end{equation}
+where $J$ is the jacobian of $\epsilon$, which is itself defined as
+\begin{equation}
+    \epsilon = \frac{e}{\sigma_e}.
+\end{equation}
+No rms normalization is applied because there is no numerical issue and enforcing a real valued $\theta_{\text{ML}}$ is done by splitting the real and imaginary parts of $J$ and $\epsilon$ in~(\ref{eq:ML_update}).
+\begin{equation}
+    J_{\text{re}} = \begin{bmatrix}
+        \Re J \\ \Im J
+    \end{bmatrix} \quad \text{and} \quad \epsilon_{\text{re}} = \begin{bmatrix}
+        \Re \epsilon \\ \Im \epsilon
+    \end{bmatrix}
+\end{equation}
 
+\section{Model Order Selection}
+\label{sec:AIC}
+
+The estimators described in Sec.~\ref{sec:parametric_model} require a model order $(n_a, n_b)$ to determine the right parameters $\theta = [a_0, \cdots, b_{n_b}]$ of~(\ref{eq:TF_general_form}).
+
+The AIC criterion is therefore used. It depends on the cost of the estimator $V_{\text{est}}$ and the order of the model, giving an \textit{AIC cost}, given by
+\begin{equation}
+    V_{\text{AIC}} = V_{\text{est}} \Bigg( 1 + \frac{n_a + n_b}{N_e} \Bigg).
+\end{equation}
+This is computed for various values of $n_a$ and $n_b$ and the optimal order is the one with the smallest \textit{AIC cost}.
+
+The values of the order are restricted to transfer functions with more poles than zeros ($\Rightarrow n_a \geqslant n_b$) to have a stable system.
+
+\section{Results}
+
+The AIC criterion described in Sec.~\ref{sec:AIC} has been applied to every estimator of Sec.~\ref{sec:parametric_model} and it gives for each of them a 3D plot like the one shown in Fig.~\ref{fig:AIC_3D}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/AIC_BTLS.png}
+    \caption{AIC cost depending on the order of the transfer function for the BTLS estimator. The optimal order is circled in red.}
+    \label{fig:AIC_3D}
+\end{figure}
+
+The resulting FRFs are plotted in Fig.~\ref{fig:EstimatedFRF}. It can be seen that the LLS and TLS estimators have \textit{bumps} where poles and zeros nearly cancel each other's. The three last estimators (GTLS, BTLS and ML) superpose perfectly, making them undistinguishable on the graph.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/EstimatedFRF.png}
+    \caption{Superposition of the estimated parametric FRFs amplitude (top) and phase (bottom), together with the nonparametric estimate.}
+    \label{fig:EstimatedFRF}
+\end{figure}
 
 

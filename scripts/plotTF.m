@@ -1,4 +1,4 @@
-function h = plotTF(A, B, f)
+function [h1, h2] = plotTF(A, B, f)
 % Plots G = B/A over the provided frequency vector
 % returns a handle
 %
@@ -10,6 +10,9 @@ function h = plotTF(A, B, f)
         
         G = B_eval./A_eval;
 
-        h = plot(f, db(G), 'LineWidth', 1.5);
+        subplot(211);
+        h1 = plot(f, db(G), 'LineWidth', 1.5);
+        subplot(212);
+        h2 = plot(f, angle(G), 'LineWidth', 1.5);
 
 end

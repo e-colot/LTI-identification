@@ -30,12 +30,12 @@ function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
 %% ------------ Building C_J^0.5 ---------------------
 
     % C_J = column covariance of DeltaJ
-        deltaH = zeros(length(f), Na+Nb+2);
-        deltaH(:, 1:Na+1) = repmat(-1j*2*pi*f, 1, Na+1).^(0:Na);
-        deltaH = deltaH * S;
-        deltaH = deltaH .* repmat(sqrt(G_var), 1, Na+Nb+2);
+        DeltaJ = zeros(length(f), Na+Nb+2);
+        DeltaJ(:, 1:Na+1) = repmat(1j*2*pi*f, 1, Na+1).^(0:Na);
+        DeltaJ = DeltaJ * S;
+        DeltaJ = DeltaJ .* repmat(sqrt(G_var), 1, Na+Nb+2);
     
-        C_J = deltaH' * deltaH;
+        C_J = DeltaJ' * DeltaJ;
         
       % To impose real parameters
         C_J = real(C_J);
