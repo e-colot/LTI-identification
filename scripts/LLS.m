@@ -1,5 +1,5 @@
 function [A, B, cost] = LLS(G_BLA, f, Na, Nb)
-% [A, B, cost] = TLS(G_BLA, f, Na, Nb)
+% [A, B, cost] = LLS(G_BLA, f, Na, Nb)
 % Determines the parameters A and B using a LLS estimator (with a_0 = 1).
 % 
 % Na and Nb are the order of the denominator and numerator of the

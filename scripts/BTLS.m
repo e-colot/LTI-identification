@@ -1,5 +1,5 @@
-function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, r)
-% [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, r)
+function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, r)
+% [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, r)
 % Determines the parameters A and B using a BTLS estimator. The starting
 % value for theta is computed using a GTLS estimator
 % 
@@ -9,9 +9,9 @@ function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, itrMax, r)
 % Written by E. Colot on Dec 13 2025
 
 [Agtls, Bgtls, ~] = GTLS(G_BLA, G_var, f, Na, Nb);
-theta0 = [flipud(Agtls); flipud(Bgtls)];
+oldTheta = [flipud(Agtls); flipud(Bgtls)];
 
-prevCost = NaN;
+oldCost = Inf;
 s = 1j*2*pi*f;
 
 % J0 = [Y sY ... U sU ...]
@@ -27,75 +27,68 @@ s = 1j*2*pi*f;
 % C_J = column covariance of DeltaJ
     DeltaJ0 = zeros(length(f), Na+Nb+2);
     DeltaJ0(:, 1:Na+1) = repmat(s, 1, Na+1).^(0:Na);
+    DeltaJ0 = DeltaJ0 .* repmat(sqrt(G_var), 1, Na+Nb+2);
 
-    for itr = 1:itrMax
+    itrCnt = 1;
 
-%% -------- Computation of the weight W ---------
-        oldTheta = theta0;
-
-        Aprev = polyval(flipud(oldTheta(1:Na+1)), s);
-        Aprev = diag(Aprev);
-
-        var_e = abs(Aprev).^2 * G_var;
-        W = diag(var_e.^(-r));
-
-%% ------------ Building J ---------------------
-
-      % Add weight to J
-        J = W * J0;
+    while 1
     
-      % To force real parameters, the real and imaginary part of J must be
-      % split
-        J = [real(J)  ;
-             imag(J) ];
-    
-      % for conditioning, rms normalization of J (column-wise)
-        S = diag(1./rms(J));
-        J = J * S;
+        %% ------ Weights ------
+            % var_e = |A|^2 * G_var
+            A = s.^(0:Na)*oldTheta(1:Na+1);
+            var_e = abs(A).^2 .* G_var;
 
-%% ------------ Building C_J^0.5 ---------------------
+            W = diag(var_e.^(-r));
+         
+        %% ------ Scaling ------
+            % for J
+            J = W * J0;
+            J_re = [real(J); imag(J)];
 
-        DeltaJ = DeltaJ0 * S;
-        DeltaJ = W * DeltaJ;
-        DeltaJ = DeltaJ .* repmat(sqrt(G_var), 1, Na+Nb+2);
-    
-        C_J = DeltaJ' * DeltaJ;
-        
-      % To impose real parameters
-        C_J = real(C_J);
-    
-        % To compute C_J^0.5, it must be diagonalized
-        [eigenVect, eigenVal] = eig(C_J);
-        sqrtC_J = eigenVect * sqrt(eigenVal) * eigenVect';
+            S = diag(1./rms(J_re));
+            J_re = J_re * S;
 
-%% ------------- Computation of theta -------------
+            % for C_J
+            DeltaJ = W * DeltaJ0 * S;
 
-        [~,~,XJ,CJ,SJ] = gsvd(J, sqrtC_J);
-        
-        [~, i] = min(diag(CJ)./diag(SJ));
-        
-        Xinv = inv(XJ');
-        newTheta = 1/SJ(i, i) * Xinv(:, i);
-        
-        % because of the rms normalization
-        newTheta = S * newTheta;
-        
-%% Check the new cost
-        A = flipud(newTheta(1:Na+1));
-        B = flipud(newTheta(Na+2:end));
-        A_eval = polyval(A, s);
-        B_eval = polyval(B, s);
-        
-        G_est = B_eval./A_eval;
-        err = G_BLA-G_est;
+            C_J_re = real(DeltaJ' * DeltaJ);
+                    
+            % To compute C_J^0.5, it must be diagonalized
+            [eigenVect, eigenVal] = eig(C_J_re);
+            sqrt_C_J_re = eigenVect * sqrt(eigenVal) * eigenVect';
 
-        cost = sum(abs(err).^2 ./ (var_e.^r));
-        if (cost >= prevCost)
-            disp(['BTLS stopped after ', num2str(itr), ' iterations due to convergence']);
-            return
+        %% ------ Computation of theta ------
+            [~,~,XJ,CJ,SJ] = gsvd(J_re, sqrt_C_J_re);
+            
+            [~, i] = min(diag(CJ)./diag(SJ));
+            
+            Xinv = inv(XJ');
+            newTheta = 1/SJ(i, i) * Xinv(:, i);
+            
+            % because of the rms normalization
+            newTheta = S * newTheta;
+
+        %% ------ Cost computation ------
+            A = s.^(0:Na)*newTheta(1:Na+1);
+            B = s.^(0:Nb)*newTheta(Na+2:end);
+
+            e = A.*G_BLA - B;
+            var_e = abs(A).^2 .* G_var;
+
+            newCost = sum(abs(e).^2 ./ (var_e.^r));
+
+        if (newCost < oldCost)
+            oldTheta = newTheta;
+            oldCost = newCost;
+            itrCnt = itrCnt + 1;
+        else
+            % disp(['BTLS stopped after ', num2str(itrCnt), ' iterations.']);
+            break;
         end
-        prevCost = cost;
-
     end
+
+    A = flipud(oldTheta(1:Na+1));
+    B = flipud(oldTheta(Na+2:end));
+    cost = oldCost;
 
 end
