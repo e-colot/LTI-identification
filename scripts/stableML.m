@@ -1,4 +1,4 @@
-function [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, show)
+function [A, B, cost, K] = stableML(G_BLA, G_var, f, Na, Nb, show)
 % [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator that imposes 
 % stable poles. The starting value for theta is computed using a GTLS 
@@ -19,35 +19,41 @@ function [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, show)
     [Agtls, Bgtls, ~] = GTLS(G_BLA, G_var, f, Na, Nb);
     oldA = roots(Agtls);
     oldB = flipud(Bgtls);
+        % fixing oldB(end), to impose a scaling
+        oldB = oldB / oldB(end);
     oldCost = inf;
     itrCnt = 1;
 
     thetaChange = 0;
 
+      % impose negative roots
+      oldA = -abs(real(oldA)) + 1j * imag(oldA);
+
 %% Newton-Gauss method
 
     while 1
         
-        [J_re, eps_re] = constrJacob(G_BLA, G_var, s, oldA, oldB, Na, Nb);
+        [J, eps] = constrJacob(G_BLA, G_var, s, oldA, oldB, Na, Nb);
 
-        % removing low singular values
-        tol = 1e-5;
-        [U, S, V] = svd(J_re);
-        S = S * diag((diag(S) > tol));
-        J_re = U*S*V';
-
-        % normalization
-            S = diag(sqrt(sum(J_re.^2)));
-            J_re = J_re * S;
-
-        deltaTheta = -J_re\eps_re;
-
-        % normalization
-            deltaTheta = S * deltaTheta;
+        deltaTheta = -J\eps;
 
         thetaChange(itrCnt) = norm(deltaTheta);
 
-        epsilon = constrEps(G_BLA, G_var, s, oldA + deltaTheta(1:Na), oldB + deltaTheta(Na+1:end), Nb);
+        newA = oldA + deltaTheta(1:Na);
+        newB = oldB + [deltaTheta(Na+1:end); 0];
+
+          % check that the poles are still in the left half-plane
+          kmax = 1;
+          for i = 1:Na
+              if real(newA(i)) > 0
+                  kmax = min(kmax, - (real(oldA(i))/(real(newA(i)-oldA(i)))));
+              end
+          end
+
+        newA = oldA + kmax*(newA-oldA);
+        newB = oldB + kmax*(newB-oldB);
+
+        epsilon = constrEps(G_BLA, G_var, s, newA, newB, Nb);
     
         cost = epsilon' * epsilon;
 
@@ -56,8 +62,8 @@ function [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, show)
             break;
         else
             oldCost = cost;
-            oldA = oldA + deltaTheta(1:Na);
-            oldB = oldB + deltaTheta(Na+1:end);
+            oldA = newA;
+            oldB = newB;
             itrCnt = itrCnt + 1;
         end
 
@@ -71,44 +77,40 @@ function [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, show)
     end
 
     A = oldA;
-    B = flipud(oldB);
+    B = oldB;
     cost = oldCost;
 
 end
 
 
 
-function [jacob_re, eps_re] = constrJacob(G_BLA, G_var, s, oldA, oldB, Na, Nb)
+function [jacob, eps] = constrJacob(G_BLA, G_var, s, oldA, oldB, Na, Nb)
     %% ----------- Jacobian matrix construction ---------------        
         % A:
-            A = prod(s + (oldA.^2)', 2);
+            A = prod(s + oldA.', 2);
         % B:
             B = s.^(0:Nb)*oldB;
         % e:
             e = A.*G_BLA-B;
-            e_re = [real(e); imag(e)];
-        % d/dtheta (A):
-            dA_dtheta = [2*A .* (oldA' ./ (s + (oldA.^2)')), zeros(size(G_BLA, 1), Nb+1)];
+        % d/dtheta (A, B):
+            dA_dtheta = [A ./ (s + oldA.'), zeros(size(G_BLA, 1), Nb)];
         % d/dtheta (e):
-            de_r_dthetaAlpha = real(dA_dtheta(:, 1:Na)).*real(G_BLA) - imag(dA_dtheta(:, 1:Na)).*imag(G_BLA);
-            de_i_dthetaAlpha = real(dA_dtheta(:, 1:Na)).*imag(G_BLA) + imag(dA_dtheta(:, 1:Na)).*real(G_BLA);
-            de_r_dthetaB = -real(s.^(0:Nb));
-            de_i_dthetaB = -imag(s.^(0:Nb));
-            de_dtheta_re = [de_r_dthetaAlpha, de_r_dthetaB;
-                            de_i_dthetaAlpha, de_i_dthetaB];
+            de_dthetaA = dA_dtheta(:, 1:Na).*G_BLA;
+            de_dthetaB = -s.^(0:Nb-1);
+            de_dtheta = [de_dthetaA, de_dthetaB];
         % sigma_e:
             sigma_e = abs(A) .* sqrt(G_var);
         % d/dtheta (sigma_e^2):
             dsig_dtheta = 2*real(dA_dtheta.*conj(A)).*G_var;
     
-        jacob_re = de_dtheta_re./repmat(sigma_e, 2, 1) - e_re./(2*repmat(sigma_e, 2, 1).^3).*repmat(dsig_dtheta, 2, 1);
+        jacob = de_dtheta./sigma_e - e./(2*sigma_e.^3).*dsig_dtheta;
 
-        eps_re = (e_re./repmat(sigma_e, 2, 1));
+        eps = e./sigma_e;
 end
 
 function eps = constrEps(G_BLA, G_var, s, oldA, oldB, Nb)
         % A:
-            A = prod(s + (oldA.^2)', 2);
+            A = prod(s + oldA', 2);
         % B:
             B = s.^(0:Nb)*oldB;
         % e:
@@ -118,4 +120,5 @@ function eps = constrEps(G_BLA, G_var, s, oldA, oldB, Nb)
 
         eps = (e./sigma_e);
 end
+
 

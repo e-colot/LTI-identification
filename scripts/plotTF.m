@@ -21,7 +21,7 @@ function [h1, h2] = plotTF(A, B, f, type)
             subplot(212);
             h2 = plot(f, angle(G), 'LineWidth', 1.5);
         elseif strcmp(type, 'mult')
-            A_eval = prod(s + (A.^2)', 2);
+            A_eval = prod(s + A', 2);
             B_eval = polyval(B, s);
 
             G = B_eval./A_eval;
