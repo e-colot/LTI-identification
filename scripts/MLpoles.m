@@ -37,4 +37,9 @@ Nb = 3;
       % column contains the one the imaginary part.
     p_var = [diag(cov_p(1:Na, 1:Na)), diag(cov_p(Na+1:end, Na+1:end))];
 
+    for p = 1:Na
+        disp(['Cov of pole ', num2str(p), ':']);
+        disp([num2str(p_var(p, 1)), ' + j', num2str(p_var(p, 2))]);
+        disp(' ');
+    end
 

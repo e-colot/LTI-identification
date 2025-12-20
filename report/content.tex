@@ -442,7 +442,7 @@ Fig.~\ref{fig:optimal_order} shows the optimal order that minimizes the AIC cost
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/rlocus1.png}
-    \caption{Poles and zeros of the LLS and TLS estimators}
+    \caption{Poles and zeros of the LLS and TLS estimators. Only the ones close to the origin are shown to visualize the near pole-zero cancellation}
     \label{fig:rlocus1}
 \end{figure}
 
@@ -470,7 +470,7 @@ The covariance of the poles is then given by
 \end{equation}
 where $\frac{dp}{d\theta_{\text{ML}}}$ is based on how the parameters $[a_0, \cdots, a_{n_a}]$ relate to the poles $[p_0, \cdots, p_{n_a}]$.
 
-The resulting standard deviation on the real part of the two poles in the right half-plane was really low ($\approx 0.2$~rad/s), meaning the estimator evaluates those close to their optimal positions. 
+The resulting standard deviation on the real part of the two poles in the right half-plane was really low as shown in Table~\ref{tab:pole_covariance}, meaning the estimator evaluates those close to their optimal positions. 
 
 For reference, the third pole of the ML estimator, which is visible on the extreme left of Fig.~\ref{fig:rlocus2} has a standard deviation of $\approx 14500$~rad/s. An expected result is the uncertainty on the imaginary port of this pole. Because it is alone, it lays on the real axis and the computed variance is exactly zero. These two clues combined implies that there is definitely a pole on the real axis, but it's exact frequency cannot be extracted from the measured data.
 
@@ -484,6 +484,20 @@ which has complex poles as long as the parameters $[\alpha_0, \cdots, b_{n_b}]$ 
 
 
 
+\begin{table}[h!]
+    \centering
+    \caption{Covariance of Identified Poles}
+    \begin{tabular}{|c|c|}
+    \hline
+    Real Part & Imaginary Part\\
+    \hline
+    $2.1 \times 10^8$ & $0$ \\
+    $34.8 \times 10^{-3}$ & $34.4 \times 10^{-3}$ \\
+    $34.8 \times 10^{-3}$ & $34.4 \times 10^{-3}$ \\
+    \hline
+    \end{tabular}
+    \label{tab:pole_covariance}
+\end{table}
 
 
 
