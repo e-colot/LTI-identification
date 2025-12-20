@@ -36,9 +36,8 @@ fs = 5e3;
         % [Agtls, Bgtls, ~] = GTLS(G_BLA, total_var, f, n_a, n_b);
 
 %% Iterative estimate using BTLS
-    itrMax = 100;
     r = 1;
-    BTLSest = @(Na, Nb) BTLS(G_BLA, total_var, f, Na, Nb, itrMax, r);
+    BTLSest = @(Na, Nb) BTLS(G_BLA, total_var, f, Na, Nb, r);
     [Na_optBTLS, Nb_optBTLS, A_optBTLS, B_optBTLS] = AIC(BTLSest, NaList, NbList, Ne);
 
 %% ML
@@ -110,8 +109,8 @@ save("../results/parametricWorkspace.mat");
     plot(real(zeros_TLS), imag(zeros_TLS), 'o', MarkerSize=8, DisplayName='TLS zeros', LineWidth=2, Color=colors(2,:));
 
     xline(0, 'k--', 'HandleVisibility', 'off');
-    xlabel('Real');
-    ylabel('Imaginary');
+    xlabel('Real [rad/s]');
+    ylabel('Imaginary [rad/s]');
     legend('Location', 'best');
     grid on;
     %title('LLS and TLS');
@@ -134,8 +133,8 @@ save("../results/parametricWorkspace.mat");
     plot(real(zeros_ML), imag(zeros_ML), 'o', MarkerSize=8, DisplayName='ML zeros', LineWidth=2, Color=colors(5,:));
 
     xline(0, 'k--', 'HandleVisibility', 'off');
-    xlabel('Real');
-    ylabel('Imaginary');
+    xlabel('Real [rad/s]');
+    ylabel('Imaginary [rad/s]');
     legend('Location', 'best');
     grid on;
     %title('GTLS, BTLS, and ML');

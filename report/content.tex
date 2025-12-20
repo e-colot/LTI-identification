@@ -411,8 +411,8 @@ The AIC criterion described in Sec.~\ref{sec:AIC} has been applied\footnote{for 
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\textwidth]{Pictures/AIC_BTLS.png}
-    \caption{AIC cost depending on the order of the transfer function for the BTLS estimator. The optimal order is circled in red.}
+    \includegraphics[width=0.48\textwidth]{Pictures/AIC_TLS.png}
+    \caption{AIC cost depending on the order of the transfer function for the TLS estimator. The optimal order is circled in red.}
     \label{fig:AIC_3D}
 \end{figure}
 
@@ -427,9 +427,9 @@ The resulting FRFs are plotted in Fig.~\ref{fig:estimated_FRF}. It can be seen t
 
 Fig.~\ref{fig:optimal_order} shows the optimal order that minimizes the AIC cost~(\ref{eq:AIC_cost}). A few observations can be made:
 \begin{itemize}
-    \item The LLS and TLS estimators both have a high number of parameters and Fig.~\ref{fig:rlocus1} confirms the hypothesis of imperfect pole-zero cancellations.
-    \item GTLS has a more intermediate number of parameters.
-    \item BTLS and ML estimators use a really low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}.
+    \item The LLS and TLS estimators both have a high number of parameters and lay close to the limit $n_a = n_b$. Fig.~\ref{fig:rlocus1} confirms the hypothesis of imperfect pole-zero cancellations emitted based on the bumps of the FRF.
+    \item GTLS and BTLS have a more intermediate number of parameters.
+    \item The ML estimator uses a really low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}, which was expected.
 \end{itemize}
 
 \begin{figure}
@@ -453,11 +453,34 @@ Fig.~\ref{fig:optimal_order} shows the optimal order that minimizes the AIC cost
     \label{fig:rlocus2}
 \end{figure}
 
-Finally, the poles and zeros of the other estimator are shown in Fig.~\ref{fig:rlocus2}. It is here clearly visible that the GTLS estimator has poles in the right half-plane at high frequency, meaning the resulting system is unstable. Every estimator has poles with a positive real part but those of the ML and BTLS estimators are around $20$~Hz, which is by far \textit{less unstable} than the ones above $800$~Hz of the GTLS.
+Finally, the poles and zeros of the GTLS, BTLS and ML estimators are shown in Fig.~\ref{fig:rlocus2}. It is here clearly visible that the GTLS estimator has poles in the right half-plane at high frequency, meaning the resulting system is unstable. Every estimator has poles with a positive real part but those of the ML and BTLS estimators are around $20$~rad/s, which is by far \textit{less unstable} than the one above $1000$~rad/s of the GTLS.
 
+\section{Deeper Analysis of the Poles}
 
+\subsection{Poles position uncertainty}
 
+The covariance of the poles (and zeros) of the ML estimator can be approximated. First, the covariance of the parameters must be computed with
+\begin{equation}
+    \text{cov}(\theta_{\text{ML}}) \simeq 2 \Big(J_{\text{re}}^H J_{\text{re}}\Big)^{-1}.
+\end{equation}
 
+The covariance of the poles is then given by
+\begin{equation}
+    \text{cov}(p) = \frac{dp}{d\theta_{\text{ML}}} \text{cov}(\theta_{\text{ML}}) \frac{dp^H}{d\theta_{\text{ML}}},
+\end{equation}
+where $\frac{dp}{d\theta_{\text{ML}}}$ is based on how the parameters $[a_0, \cdots, a_{n_a}]$ relate to the poles $[p_0, \cdots, p_{n_a}]$.
+
+The resulting standard deviation on the real part of the two poles in the right half-plane was really low ($\approx 0.2$~rad/s), meaning the estimator evaluates those close to their optimal positions. 
+
+For reference, the third pole of the ML estimator, which is visible on the extreme left of Fig.~\ref{fig:rlocus2} has a standard deviation of $\approx 14500$~rad/s. An expected result is the uncertainty on the imaginary port of this pole. Because it is alone, it lays on the real axis and the computed variance is exactly zero. These two clues combined implies that there is definitely a pole on the real axis, but it's exact frequency cannot be extracted from the measured data.
+
+\subsection{Stable ML Estimators}
+
+To finally obtain a parametric FRF estimate with a stable model, the model~(\ref{eq:TF_general_form}) is changed to impose poles in the left half-plane. The transfer function now becomes
+\begin{equation}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=0}^{n_a} (s+\alpha_k^2)},
+\end{equation}
+which has complex poles as long as the parameters $[\alpha_0, \cdots, b_{n_b}]$ are real.
 
 
 

@@ -1,5 +1,5 @@
-function [A, B, cost] = ML(G_BLA, G_var, f, Na, Nb, show)
-% [A, B, cost] = ML(G_BLA, G_var, f, Na, Nb, [show])
+function [A, B, cost, thetaCov] = ML(G_BLA, G_var, f, Na, Nb, show)
+% [A, B, cost, thetaCov] = ML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator. The starting
 % value for theta is computed using a GTLS estimator
 % 
@@ -31,9 +31,16 @@ function [A, B, cost] = ML(G_BLA, G_var, f, Na, Nb, show)
         [jacob, epsilon] = constrJacob(G_BLA, G_var, s, oldTheta, Na, Nb);
 
         % For real theta:
-            J = [real(jacob); imag(jacob)];
-            e = [real(epsilon); imag(epsilon)];
-        deltaTheta = -J\e;
+            J_re = [real(jacob); imag(jacob)];
+            eps_re = [real(epsilon); imag(epsilon)];
+
+        % % for conditioning, rms normalization of J (column-wise)
+        %     S = diag(1./rms(J_re));
+        %     J_re = J_re * S;
+
+        deltaTheta = -J_re\eps_re;
+
+        % deltaTheta = S * deltaTheta;
 
         thetaChange(itrCnt) = norm(deltaTheta);
 
@@ -41,8 +48,8 @@ function [A, B, cost] = ML(G_BLA, G_var, f, Na, Nb, show)
     
         cost = epsilon' * epsilon;
 
-        if cost > oldCost
-            disp(['ML optimization finished after ', num2str(itrCnt), ' steps of Newton-Gauss method']);
+        if cost >= oldCost
+            % disp(['ML optimization finished after ', num2str(itrCnt), ' steps of Newton-Gauss method']);
             break;
         else
             oldCost = cost;
@@ -101,6 +108,8 @@ function [A, B, cost] = ML(G_BLA, G_var, f, Na, Nb, show)
     A = flipud(oldTheta(1:Na+1));
     B = flipud(oldTheta(Na+2:end));
     cost = oldCost;
+
+    thetaCov = inv(2*(J_re'*J_re));
 
 end
 

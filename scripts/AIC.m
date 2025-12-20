@@ -49,8 +49,8 @@ function [Na_opt, Nb_opt, A_opt, B_opt] = AIC(estimator, NaList, NbList, Ne)
 
     figure;
     surf(Nb_grid, Na_grid, AICdb, 'EdgeColor', 'none');
-    xlabel('Numerator order');
-    ylabel('Denominator order');
+    xlabel('n_{b}');
+    ylabel('n_{a}');
     zlabel('AIC cost [dB]');
     %title('AIC surface');
     colorbar;
