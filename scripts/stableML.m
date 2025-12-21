@@ -87,13 +87,13 @@ end
 function [jacob, eps] = constrJacob(G_BLA, G_var, s, oldA, oldB, Na, Nb)
     %% ----------- Jacobian matrix construction ---------------        
         % A:
-            A = prod(s + oldA.', 2);
+            A = prod(s - oldA.', 2);
         % B:
             B = s.^(0:Nb)*oldB;
         % e:
             e = A.*G_BLA-B;
         % d/dtheta (A, B):
-            dA_dtheta = [A ./ (s + oldA.'), zeros(size(G_BLA, 1), Nb+1)];
+            dA_dtheta = [-A ./ (s - oldA.'), zeros(size(G_BLA, 1), Nb+1)];
         % d/dtheta (e):
             de_dthetaA = dA_dtheta(:, 1:Na).*G_BLA;
             de_dthetaB = -s.^(0:Nb);
@@ -110,7 +110,7 @@ end
 
 function eps = constrEps(G_BLA, G_var, s, oldA, oldB, Nb)
         % A:
-            A = prod(s + oldA', 2);
+            A = prod(s - oldA', 2);
         % B:
             B = s.^(0:Nb)*oldB;
         % e:
