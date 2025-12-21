@@ -17,10 +17,12 @@ fs = 5e3;
     NaList = 1:15;
     NbList = 1:15;
 
+%% Run AIC on stabilized ML
+
     MLest = @(Na, Nb) stableML(G_BLA, total_var, f, Na, Nb);
     [Na_optML, Nb_optML, A_optML, B_optML] = AIC(MLest, NaList, NbList, Ne);
 
-
+%% Plots
 
     figure;
     subplot(211);
@@ -32,15 +34,15 @@ fs = 5e3;
     plotTF(A, B, f, 'poly');
 
     subplot(211);
-        legend('New algo', 'Old algo');
+        legend('ML', 'ML with stable poles');
         xlabel('Frequency [Hz]');
         ylabel('FRF Magnitude [dB]');
         xlim([f(1) f(end)]);
         grid on;
     subplot(212);
-        %legend('Non parametric', 'LLS', 'TLS', 'GTLS', 'BTLS', 'ML');
         xlabel('Frequency [Hz]');
         ylabel('FRF Phase [rad]');
         xlim([f(1) f(end)]);
         grid on;
+
 

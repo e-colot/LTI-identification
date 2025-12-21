@@ -19,8 +19,8 @@ function [A, B, cost, K] = stableML(G_BLA, G_var, f, Na, Nb, show)
     [Agtls, Bgtls, ~] = GTLS(G_BLA, G_var, f, Na, Nb);
     oldA = roots(Agtls);
     oldB = flipud(Bgtls);
-        % fixing oldB(end), to impose a scaling
-        oldB = oldB / oldB(end);
+        % scale B to adapt
+        oldB = oldB / Agtls(1);
     oldCost = inf;
     itrCnt = 1;
 
@@ -40,7 +40,7 @@ function [A, B, cost, K] = stableML(G_BLA, G_var, f, Na, Nb, show)
         thetaChange(itrCnt) = norm(deltaTheta);
 
         newA = oldA + deltaTheta(1:Na);
-        newB = oldB + [deltaTheta(Na+1:end); 0];
+        newB = oldB + [deltaTheta(Na+1:end)];
 
           % check that the poles are still in the left half-plane
           kmax = 1;
@@ -77,7 +77,7 @@ function [A, B, cost, K] = stableML(G_BLA, G_var, f, Na, Nb, show)
     end
 
     A = oldA;
-    B = oldB;
+    B = flipud(oldB);
     cost = oldCost;
 
 end
@@ -93,10 +93,10 @@ function [jacob, eps] = constrJacob(G_BLA, G_var, s, oldA, oldB, Na, Nb)
         % e:
             e = A.*G_BLA-B;
         % d/dtheta (A, B):
-            dA_dtheta = [A ./ (s + oldA.'), zeros(size(G_BLA, 1), Nb)];
+            dA_dtheta = [A ./ (s + oldA.'), zeros(size(G_BLA, 1), Nb+1)];
         % d/dtheta (e):
             de_dthetaA = dA_dtheta(:, 1:Na).*G_BLA;
-            de_dthetaB = -s.^(0:Nb-1);
+            de_dthetaB = -s.^(0:Nb);
             de_dtheta = [de_dthetaA, de_dthetaB];
         % sigma_e:
             sigma_e = abs(A) .* sqrt(G_var);
