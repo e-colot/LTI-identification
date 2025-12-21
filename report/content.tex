@@ -178,7 +178,7 @@ The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fac
 
 
 
-\subsection{Parametric Model}
+\subsection{Generalities About Parametric Identification}
 \label{sec:parametric_model}
 
 Based on the nonparametric model of Sec.~\ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ giving the following expression
@@ -207,97 +207,37 @@ S = \operatorname{diag}\!\left( \frac{1}{\mathrm{rms}\bigl(H_{:,1}\bigr)}, \dots
 
 \paragraph{Use of the nonparametric estimate} All the estimators are relying on approaching the following, which arises from the definition of a transfer function. The key idea is to notice that because
 \begin{equation}
-    Y(k) = G(j \omega_k) \times U(k),
+    Y(k) = G_{\text{BLA}}(k) \times U(k),
 \end{equation}
 a clever choice of $U$ simplifies the choice of $Y$, as
 \begin{equation}
-    U(k) = 1 \quad \forall k \quad \Rightarrow \quad Y(k) = G(j \omega_k).
+    U(k) = 1 \quad \forall k \quad \Rightarrow \quad Y(k) = G_{\text{BLA}}(k).
 \end{equation}
 
-\paragraph{Forcing real valued parameters} A real system is described by real coefficients so the imaginary part of $\theta$ must be equal to $0$. The regressor must therefore be changed.
+\paragraph{Forcing real valued parameters} A real system is described by real coefficients so the imaginary part of $\theta$ must be equal to $0$. The regressor must therefore be changed. $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$ as follows
 \begin{equation}
-    Y = H \times \theta
-\end{equation}
-\vspace{-0.8cm}
-\begin{multline}
-    \Rightarrow \quad \Re\left\{Y\right\} + j \Im\left\{Y\right\} = \Big(\Re\left\{H\right\} + j \Im\left\{H\right\}\Big) \\
-    {} \times \Big(\Re\left\{\theta\right\} + j \Im\left\{\theta\right\}\Big)
-\end{multline}
-\begin{equation}
-    \Leftrightarrow \quad \begin{bmatrix}
-        \Re\left\{Y\right\}\\
-        \Im\left\{Y\right\}
-    \end{bmatrix} = \begin{bmatrix}
-        \Re\left\{H\right\} & -\Im\left\{H\right\}\\
-        \Im\left\{H\right\} & \Re\left\{H\right\}
-    \end{bmatrix} \times \begin{bmatrix}
-        \Re\left\{\theta\right\}\\
-        \Im\left\{\theta\right\}
-    \end{bmatrix}
-\end{equation}
-And because $\Im\left\{\theta\right\} = 0$, it becomes
-\begin{equation}
-    \begin{bmatrix}
-        \Re\left\{Y\right\}\\
-        \Im\left\{Y\right\}
-    \end{bmatrix} = \begin{bmatrix}
+    y_{\text{re}} = \begin{bmatrix}
+        \Re\left\{y\right\}\\
+        \Im\left\{y\right\}
+    \end{bmatrix}, \quad \text{and} \quad H_{\text{re}} = \begin{bmatrix}
         \Re\left\{H\right\}\\
         \Im\left\{H\right\}
-    \end{bmatrix} \times \Re\left\{\theta\right\}.
-\end{equation}
-Thus $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $Y_{\text{re}}$ and $H_{\text{re}}$ as follows
-\begin{equation}
-    Y_{\text{re}} = H_{\text{re}} \times \Re\left\{\theta\right\}.
+    \end{bmatrix}
 \end{equation}
 
-As explained later on, the GTLS estimator needs a covariance matrix $C_J$ that depends on $J$. Because $J$ has become $J_{\text{re}}$, $C_{J_{\text{re}}}$ must be derived. starting from
-\begin{equation}
-    \Delta J_{\text{re}} = \begin{bmatrix}
-        \Re\left\{\Delta J\right\}\\
-        \Im\left\{\Delta J\right\}
-    \end{bmatrix}
-    \quad \text{and} \quad C_J = \mathbb{E} \Big\{ \Delta J^H \Delta J \Big\},
-\end{equation}
-The covariance matrix for a real parameters estimator is
-\begin{align}
-    C_{J_{\text{re}}} &= \mathbb{E}\Bigg\{
-    \begin{bmatrix}
-        \Re\{\Delta J\}^T & \Im\{\Delta J\}^T
-    \end{bmatrix}
-    \begin{bmatrix}
-        \Re\{\Delta J\} \\
-        \Im\{\Delta J\}
-    \end{bmatrix}
-    \Bigg\}\\
-    &= \mathbb{E}\Big\{ \Re\{\Delta J\}^T \Re\{\Delta J\} \Big\} + \mathbb{E}\Big\{ \Im\{\Delta J\}^T \Im\{\Delta J\} \Big\}.
-    \label{eq:C_Jre1}
-\end{align}
-By splitting the real and the imaginary part of $\Delta J$, $C_J$ can be computed as follows.
-\begin{equation}
-    \Delta J = \Re\left\{\Delta J\right\} + j \Im\left\{\Delta J\right\}
-\end{equation}
-\vspace{-0.7cm}
-\begin{multline}
-    \Rightarrow \quad C_J = \mathbb{E} \Big\{ \Re\left\{\Delta J\right\}^T \Re\left\{\Delta J\right\} \Big\}\\
-        + \mathbb{E} \Big\{ \Im\left\{\Delta J\right\}^T \Im\left\{\Delta J\right\} \Big\}
-        + j \Big(
-        \mathbb{E} \left\{ \Re\left\{\Delta J\right\}^T \Im\left\{\Delta J\right\} \right\}\\
-        - \mathbb{E} \left\{ \Im\left\{\Delta J\right\}^T \Re\left\{\Delta J\right\} \right\}
-        \Big)
-    \label{eq:C_Jre2}
-\end{multline}
-Finally, by comparing~(\ref{eq:C_Jre1}) with~(\ref{eq:C_Jre2}), it is found that
+The covariance matrix $C_J$ used in the GTLS estimator in Sec.~\ref{sec:GTLS} must also be replaced with
 \begin{equation}
     C_{J_{\text{re}}} = \Re \Big\{ C_J \Big\}.
 \end{equation}
 
+\subsection{Parametric Estimators}
 \subsubsection{Linear Least Squares Estimator (LLS)}
 
 It minimizes
 \begin{equation}
     V_{\text{LLS}} = \sum_{k} |E(k)|^2,
 \end{equation}
-where $E(k) = AY(k)-BU(k)$. The optimal parameters $\theta_{\text{LLS}}$ is found by writing the problem as
+where $E(k) = A_kY(k)-B_kU(k)$. The optimal parameters $\theta_{\text{LLS}}$ is found by writing the problem as
 \begin{equation}
     Y = H \theta_{\text{LLS}},
 \end{equation}
@@ -307,7 +247,7 @@ under the assumption that $a_0$ is different from $0$. With all the previous tri
 \end{equation}
 and its solution is given by
 \begin{equation}
-    \theta_{\text{LLS}} = S \Big(H_{\text{re}}\times S\Big)^\dagger G_{\text{BLA}_{\text{re}}}
+    \theta_{\text{LLS}} = S \Big(H_{\text{re}}\times S\Big)^\dagger G_{\text{BLA}_{\text{re}}}.
 \end{equation}
 
 \subsubsection{Total Least Squares Estimator (TLS)}
@@ -331,6 +271,7 @@ where $J$ is the regression matrix such that
 and $V_{\tilde{J}_{\text{re}}}$ is the right matrix of the singular value decomposition (svd) of $\tilde{J}_{\text{re}}$. This estimator is not consistent because the covariance of $J$ is different from the identity matrix.
 
 \subsubsection{Generalized Total Least Squares Estimator (GTLS)}
+\label{sec:GTLS}
 
 It allows to overcome the inconsistency of the TLS estimator by using the covariance matrix of $J$, namely
 \begin{equation}
@@ -363,7 +304,7 @@ In practice, it is the same as a GTLS estimator where
 \end{equation}
 with
 \begin{equation}
-    W = \text{diag}\Big(\sigma_e^{-r}\Big).
+    W = \text{diag}\Big(\sigma_e^{-2r}\Big).
 \end{equation}
 The parameter $r$ is chosen in $[0; 1]$ where a value close to $0$ corresponds to the GTLS estimator. It is then applied iteratively until the new cost is greater or equal to the previous one.
 
@@ -371,25 +312,71 @@ The parameter $r$ is chosen in $[0; 1]$ where a value close to $0$ corresponds t
 
 This estimator maximizes the probability that the parameters $\theta_{\text{ML}}$ generated the measured data, and is therefore mathematically the best. It is however nonlinear and must be solved iteratively, just as for the BTLS. Its cost function is
 \begin{equation}
-    V_{\text{ML}} = \frac{1}{2} \sum_k \frac{|e(j \omega_k, \theta_{\text{ML}})|^2}{\sigma_e^2(j \omega_k, \theta_{\text{ML}})}
+    V_{\text{ML}} = \frac{1}{2} \sum_k \frac{|E(k)|^2}{\sigma_e^2(k)}
 \end{equation}
 and the parameter update $\Delta \theta$ is given by
 \begin{equation}
-    \Delta \theta = -J^\dagger \epsilon,
+    \Delta \theta = -J_{\text{re}}^\dagger \epsilon_{\text{re}},
     \label{eq:ML_update}
 \end{equation}
 where $J$ is the jacobian of $\epsilon$, which is itself defined as
 \begin{equation}
     \epsilon = \frac{e}{\sigma_e}.
 \end{equation}
-No rms normalization is applied because there is no numerical issue and enforcing a real valued $\theta_{\text{ML}}$ is done by splitting the real and imaginary parts of $J$ and $\epsilon$ in~(\ref{eq:ML_update}).
+
+The main difficulty in the implementation of the ML estimator is in the computation of the jacobian $J$. It needs $A_k$ and $B_k$ such that
 \begin{equation}
-    J_{\text{re}} = \begin{bmatrix}
-        \Re J \\ \Im J
-    \end{bmatrix} \quad \text{and} \quad \epsilon_{\text{re}} = \begin{bmatrix}
-        \Re \epsilon \\ \Im \epsilon
-    \end{bmatrix}
+    \begin{aligned}
+        E(k) &= A_k Y(k) - B_k U(k)\\
+        &= A_k G_{\text{BLA}}(k) - B_k.
+    \end{aligned}
 \end{equation}
+
+From the model~(\ref{eq:TF_general_form}), these are given by
+\begin{equation}
+    A_k = \sum_i a_i (j\omega_k)^i \quad \text{and} \quad B_k = \sum_i b_i (j\omega_k)^i.
+\end{equation}
+
+The gradient of $A_k$ and $B_k$ with regards to $\theta$ is also needed and there is therefore a need to define $\theta$ as
+\begin{equation}
+    \theta = \begin{bmatrix}
+        a_0 & \cdots & a_{n_a}& b_0 & \cdots & b_{n_b}
+    \end{bmatrix}^T.
+\end{equation}
+In the following, it will often be written as $\theta = [\theta_a \quad \theta_b]^T$ to ease the notation but $\theta_a$ and $\theta_b$ still contains multiple elements.
+
+The derivatives with respect to $\theta$ is computed by deriving it with respect to $\theta_a$ and $\theta_b$ separately but they are concatenated back afterwards.
+\begin{equation}
+    \frac{\partial A_k}{\partial \theta_a} = \begin{bmatrix}
+        1 & j\omega_k & \cdots & (j\omega_k)^{n_a}
+    \end{bmatrix}^T, \quad
+    \frac{\partial A_k}{\partial \theta_b} = 0_{(n_b+1) \times 1}
+\end{equation}
+\begin{equation}
+    \frac{\partial B_k}{\partial \theta_a} = 0_{(n_a+1) \times 1}, \quad
+    \frac{\partial B_k}{\partial \theta_b} = \begin{bmatrix}
+        1 & j\omega_k & \cdots & (j\omega_k)^{n_b}
+    \end{bmatrix}^T
+\end{equation}
+
+The rest of the computation of the jacobian simply follows what has been explained in the lectures so it is not explained again here.
+
+The ML estimator is limited to applying the Newton-Gauss method and does not implement the Levenberg-Marquardt algorithm as the norm of the parameter change per iteration was low, as shown on Fig.~\ref{fig:delta_theta_norm}. This gives the intuition that the result of Newton-Gauss is already close to the optimal parameters.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/ML_theta_norm.png}
+    \caption{Norm of the parameter change in function of the iteration for the optimal order of the ML algorithm.}
+    \label{fig:delta_theta_norm}
+\end{figure}
+
+
+
+
+
+
+
+
 
 \section{Model Order Selection}
 \label{sec:AIC}
@@ -429,27 +416,27 @@ Fig.~\ref{fig:optimal_order} shows the optimal order that minimizes the AIC cost
 \begin{itemize}
     \item The LLS and TLS estimators both have a high number of parameters and lay close to the limit $n_a = n_b$. Fig.~\ref{fig:rlocus1} confirms the hypothesis of imperfect pole-zero cancellations emitted based on the bumps of the FRF.
     \item GTLS and BTLS have a more intermediate number of parameters.
-    \item The ML estimator uses a really low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}, which was expected.
+    \item The ML estimator uses a really low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}, which was expected as it is mathematically the best estimator.
 \end{itemize}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/optimalOrder.png}
-    \caption{Optimal orders for each estimator, according to the AIC criterion. The red dashed line is the stability limit $n_a = n_b$}
+    \caption{Optimal orders for each estimator, according to the AIC criterion. The red dashed line is the stability limit $n_a = n_b$.}
     \label{fig:optimal_order}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/rlocus1.png}
-    \caption{Poles and zeros of the LLS and TLS estimators. Only the ones close to the origin are shown to visualize the near pole-zero cancellation}
+    \caption{Poles and zeros of the LLS and TLS estimators. Only the ones close to the origin are shown to visualize the near pole-zero cancellation.}
     \label{fig:rlocus1}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/rlocus2.png}
-    \caption{Poles and zeros of the GTLS, BTLS and ML estimators}
+    \caption{Poles and zeros of the GTLS, BTLS and ML estimators.}
     \label{fig:rlocus2}
 \end{figure}
 
@@ -470,34 +457,36 @@ The covariance of the poles is then given by
 \end{equation}
 where $\frac{dp}{d\theta_{\text{ML}}}$ is based on how the parameters $[a_0, \cdots, a_{n_a}]$ relate to the poles $[p_0, \cdots, p_{n_a}]$.
 
-The resulting standard deviation on the real part of the two poles in the right half-plane was really low as shown in Table~\ref{tab:pole_covariance}, meaning the estimator evaluates those close to their optimal positions. 
+The resulting standard deviation on the real part of the two poles in the right half-plane was really low as shown in Table~\ref{tab:pole_stddev}, meaning the estimator evaluates those close to their optimal positions. 
+
+\begin{table}[h!]
+    \centering
+    \caption{Standard Deviation of Identified Poles, in rad/s}
+    \begin{tabular}{|c|c|}
+    \hline
+    \textbf{Real Part} & \textbf{Imaginary Part} \\
+    \hline
+    $14.578 \times 10^3$ & $0$ \\
+    $0.186$ & $0.185$ \\
+    $0.186$ & $0.185$ \\
+    \hline
+    \end{tabular}
+    \label{tab:pole_stddev}
+\end{table}
 
 For reference, the third pole of the ML estimator, which is visible on the extreme left of Fig.~\ref{fig:rlocus2} has a standard deviation of $\approx 14500$~rad/s. An expected result is the uncertainty on the imaginary port of this pole. Because it is alone, it lays on the real axis and the computed variance is exactly zero. These two clues combined implies that there is definitely a pole on the real axis, but it's exact frequency cannot be extracted from the measured data.
 
 \subsection{Stable ML Estimators}
 
-To finally obtain a parametric FRF estimate with a stable model, the model~(\ref{eq:TF_general_form}) is changed to impose poles in the left half-plane. The transfer function now becomes
+To obtain a parametric FRF estimate with a stable model, the model~(\ref{eq:TF_general_form}) is changed to impose poles in the left half-plane. The transfer function now becomes
 \begin{equation}
-    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=0}^{n_a} (s+\alpha_k^2)},
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=0}^{n_a} (s-\alpha_k)}.
+    \label{eq:TF_stable_model}
 \end{equation}
-which has complex poles as long as the parameters $[\alpha_0, \cdots, b_{n_b}]$ are real.
 
 
 
-\begin{table}[h!]
-    \centering
-    \caption{Covariance of Identified Poles}
-    \begin{tabular}{|c|c|}
-    \hline
-    Real Part & Imaginary Part\\
-    \hline
-    $2.1 \times 10^8$ & $0$ \\
-    $34.8 \times 10^{-3}$ & $34.4 \times 10^{-3}$ \\
-    $34.8 \times 10^{-3}$ & $34.4 \times 10^{-3}$ \\
-    \hline
-    \end{tabular}
-    \label{tab:pole_covariance}
-\end{table}
+
 
 
 

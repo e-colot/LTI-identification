@@ -46,7 +46,11 @@ function [A, B, cost, K] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
         J_re = [real(J); imag(J)];
         eps_re = [real(eps); imag(eps)];
 
+        % % for conditioning, rms normalization of J (column-wise)
+        %     S = diag(1./rms(J_re));
+        %     J_re = J_re * S;
         deltaTheta = -J_re\eps_re;
+        % deltaTheta = S * deltaTheta;
 
         thetaChange(itrCnt) = norm(deltaTheta);
 

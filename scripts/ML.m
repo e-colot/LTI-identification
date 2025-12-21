@@ -34,9 +34,10 @@ function [A, B, cost, thetaCov] = ML(G_BLA, G_var, f, Na, Nb, show)
             J_re = [real(jacob); imag(jacob)];
             eps_re = [real(epsilon); imag(epsilon)];
 
-        % % for conditioning, rms normalization of J (column-wise)
-        %     S = diag(1./rms(J_re));
-        %     J_re = J_re * S;
+        % for conditioning, rms normalization of J (column-wise)
+            
+            % S = diag(1./sum(J_re.^2, 1));
+            % J_re = J_re * S;
 
         deltaTheta = -J_re\eps_re;
 
