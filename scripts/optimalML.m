@@ -1,4 +1,4 @@
-function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
+function [A, B, cost, p_var] = optimalML(G_BLA, G_var, f, Na, Nb, show)
 % [A, B, cost, p_var] = stableML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator that imposes 
 % stable poles. The starting value for theta is computed using a GTLS 
@@ -17,25 +17,20 @@ function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
     end
 
     s = 1j*2*pi*f;
-    [Agtls, Bgtls, ~] = GTLS(G_BLA, G_var, f, Na, Nb);
-    oldA = roots(Agtls);
-    oldB = flipud(Bgtls);
-        % scale B to adapt
-        oldB = oldB / Agtls(1);
+    [oldA, oldB, ~] = stableRealML(G_BLA, G_var, f, Na, Nb);
+    oldB = flipud(oldB);
+
     itrCnt = 1;
 
     thetaChange = 0;
 
-      % impose negative roots
-      oldA = -abs(real(oldA)) + 1j * imag(oldA);
-
     % split real and complex poles
     complexPoles = oldA(imag(oldA) > 0);
       % complex ones
-        oldAlpha = abs(complexPoles);
-        oldPhi = angle(complexPoles);
+        oldAlpha = sqrt(-real(complexPoles));
+        oldPhi = imag(complexPoles);
       % real ones
-        oldA = oldA(imag(oldA) == 0);
+        oldA = sqrt(-oldA(imag(oldA) == 0));    
 
     epsilon = constrEps(G_BLA, G_var, s, oldA, oldAlpha, oldPhi, oldB);
     oldCost = epsilon' * epsilon;
@@ -61,67 +56,6 @@ function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
         newAlpha = oldAlpha + deltaTheta(size(oldA, 1)+1:size(oldA, 1)+size(oldAlpha, 1));
         newPhi = oldPhi + deltaTheta(size(oldA, 1)+size(oldAlpha, 1)+1:size(oldA, 1)+size(oldAlpha, 1)+size(oldPhi, 1));
         newB = oldB + deltaTheta(size(oldA, 1)+size(oldAlpha, 1)+size(oldPhi, 1)+1:end);
-
-        % check that the poles are still in the left half-plane
-          kmax = 1;
-
-            % check real poles
-          for i = 1:size(oldA, 1)
-              if newA(i) > 0
-                  kmax = min(kmax, - (oldA(i)/(newA(i)-oldA(i))));
-              end
-          end
-            % check complex poles
-          for i = 1:size(oldAlpha, 1)
-              oldPole = oldAlpha(i) * exp(1j * oldPhi(i));
-              newPole = newAlpha(i) * exp(1j * newPhi(i));
-              if real(newPole) > 0
-                  kmax = min(kmax, - (real(oldPole)/(real(newPole-oldPole))));
-              end
-          end
-
-        if kmax <= 0 || ~isfinite(kmax)
-            error('Something went wrong...');
-        end
-
-        % safety margin
-        kmax = 0.99*kmax;
-
-        newA = oldA + kmax*(newA-oldA);
-          % linearly changing amplitude and phase could result in a
-          % positive pole -> going back to real-imag representation
-        for i = 1:size(oldAlpha, 1)
-              oldPole = oldAlpha(i) * exp(1j * oldPhi(i));
-              newPole = newAlpha(i) * exp(1j * newPhi(i));
-              newPole = oldPole + kmax*(newPole-oldPole);
-              newAlpha(i) = abs(newPole);
-              newPhi(i) = angle(newPole);
-        end
-        newB = oldB + kmax*(newB-oldB);
-
-        % check for any overshoot in the right half-plane, meaning it is a
-        % limit case and the optimization can be stopped
-        stop = 0;
-        if kmax < 1e-12
-            % slow convergence, trying to push the poles in the right 
-            % half-plane
-            stop = 1;
-        end
-          for i = 1:size(oldA, 1)
-              if newA(i) > 0
-                  stop = 1;
-              end
-          end
-            % check complex poles
-          for i = 1:size(oldAlpha, 1)
-              newPole = newAlpha(i) * exp(1j * newPhi(i));
-              if real(newPole) > 0
-                  stop = 1;
-              end
-          end
-        if stop
-            break;
-        end
 
         epsilon = constrEps(G_BLA, G_var, s, newA, newAlpha, newPhi, newB);
     
@@ -186,67 +120,6 @@ function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
         newPhi = oldPhi + deltaTheta(size(oldA, 1)+size(oldAlpha, 1)+1:size(oldA, 1)+size(oldAlpha, 1)+size(oldPhi, 1));
         newB = oldB + deltaTheta(size(oldA, 1)+size(oldAlpha, 1)+size(oldPhi, 1)+1:end);
 
-        % check that the poles are still in the left half-plane
-          kmax = 1;
-
-            % check real poles
-          for i = 1:size(oldA, 1)
-              if newA(i) > 0
-                  kmax = min(kmax, - (oldA(i)/(newA(i)-oldA(i))));
-              end
-          end
-            % check complex poles
-          for i = 1:size(oldAlpha, 1)
-              oldPole = oldAlpha(i) * exp(1j * oldPhi(i));
-              newPole = newAlpha(i) * exp(1j * newPhi(i));
-              if real(newPole) > 0
-                  kmax = min(kmax, - (real(oldPole)/(real(newPole-oldPole))));
-              end
-          end
-
-        if kmax <= 0 || ~isfinite(kmax)
-            error('Something went wrong...');
-        end
-
-        % safety margin
-        kmax = 0.99*kmax;
-
-        newA = oldA + kmax*(newA-oldA);
-          % linearly changing amplitude and phase could result in a
-          % positive pole -> going back to real-imag representation
-        for i = 1:size(oldAlpha, 1)
-              oldPole = oldAlpha(i) * exp(1j * oldPhi(i));
-              newPole = newAlpha(i) * exp(1j * newPhi(i));
-              newPole = oldPole + kmax*(newPole-oldPole);
-              newAlpha(i) = abs(newPole);
-              newPhi(i) = angle(newPole);
-        end
-        newB = oldB + kmax*(newB-oldB);
-
-        % check for any overshoot in the right half-plane, meaning it is a
-        % limit case and the optimization can be stopped
-        stop = 0;
-        if kmax < 1e-12
-            % slow convergence, trying to push the poles in the right 
-            % half-plane
-            stop = 1;
-        end
-          for i = 1:size(oldA, 1)
-              if newA(i) > 0
-                  stop = 1;
-              end
-          end
-            % check complex poles
-          for i = 1:size(oldAlpha, 1)
-              newPole = newAlpha(i) * exp(1j * newPhi(i));
-              if real(newPole) > 0
-                  stop = 1;
-              end
-          end
-        if stop
-            break;
-        end
-
         epsilon = constrEps(G_BLA, G_var, s, newA, newAlpha, newPhi, newB);
 
         cost = epsilon' * epsilon;
@@ -273,10 +146,10 @@ function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
     Are = [];
     Acplx = [];
     if size(oldA, 1) ~= 0
-        Are = oldA;
+        Are = -oldA.^2;
     end
     if size(oldAlpha, 1) ~= 0
-        Acplx = [oldAlpha .* exp(1j*oldPhi); oldAlpha .* exp(-1j*oldPhi)];
+        Acplx = [-oldAlpha.^2 + 1j*oldPhi; -oldAlpha.^2 - 1j*oldPhi];
     end
     A = [Are; Acplx];
     B = flipud(oldB);
@@ -293,11 +166,11 @@ function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
     nalpha = size(oldAlpha, 1);
 
     dp_dtheta = zeros(na+2*nalpha, na+2*nalpha);
-    dp_dtheta(1:na, 1:na) = eye(na);
-    dp_dtheta(na+1:na+nalpha, na+1:na+nalpha) = diag(exp(1j*oldPhi));
-    dp_dtheta(na+nalpha+1:na+2*nalpha, na+1:na+nalpha) = diag(exp(-1j*oldPhi));
-    dp_dtheta(na+1:na+nalpha, na+nalpha+1:na+2*nalpha) = diag(1j*oldAlpha .* exp(1j*oldPhi));
-    dp_dtheta(na+nalpha+1:na+2*nalpha, na+nalpha+1:na+2*nalpha) = diag(-1j*oldAlpha .* exp(-1j*oldPhi));
+    dp_dtheta(1:na, 1:na) = -2*diag(oldA);
+    dp_dtheta(na+1:na+nalpha, na+1:na+nalpha) = -2*diag(oldAlpha);
+    dp_dtheta(na+nalpha+1:na+2*nalpha, na+1:na+nalpha) = -2*diag(oldAlpha);
+    dp_dtheta(na+1:na+nalpha, na+nalpha+1:na+2*nalpha) = 1j*eye(nalpha);
+    dp_dtheta(na+nalpha+1:na+2*nalpha, na+nalpha+1:na+2*nalpha) = -1j*eye(nalpha);
 
       % split real and imaginary part
       dp_dtheta = [real(dp_dtheta); imag(dp_dtheta)];
@@ -308,7 +181,6 @@ function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
       % The first column contains the variance of the real part, the second
       % column contains the one the imaginary part.
     p_var = [diag(cov_p(1:Na, 1:Na)), diag(cov_p(Na+1:end, Na+1:end))];
-
 
 end
 
@@ -321,10 +193,10 @@ function [jacob, eps] = constrJacob(G_BLA, G_var, s, oldA, oldAlpha, oldPhi, old
             Are = 1;
             Acplx = 1;
             if size(oldA, 1) ~= 0
-                Are = prod(s - oldA', 2);
+                Are = prod(s + (oldA').^2, 2);
             end
             if size(oldAlpha, 1) ~= 0
-                Acplx = prod(s.^2 - 2*s*(oldAlpha' .* cos(oldPhi')) + (oldAlpha.^2)', 2);
+                Acplx = prod(s.^2 + 2*s*(oldAlpha').^2 + (oldAlpha').^4 + (oldPhi').^2, 2);
             end
             A = Are .* Acplx;
         % B:
@@ -336,11 +208,11 @@ function [jacob, eps] = constrJacob(G_BLA, G_var, s, oldA, oldAlpha, oldPhi, old
             dA_dtheta_alpha = [];
             dA_dtheta_phi = [];
             if size(oldA, 1) ~= 0
-                dA_dtheta_a = -A ./ (s - oldA');
+                dA_dtheta_a = 2*A .* (oldA' ./ (s + (oldA').^2));
             end
             if size(oldAlpha, 1) ~= 0
-                dA_dtheta_alpha = A ./ (s.^2 - 2*s * oldAlpha' .* cos(oldPhi')  + (oldAlpha.^2)') .* (2*oldAlpha' - s*2.*cos(oldPhi'));
-                dA_dtheta_phi = A ./ (s.^2 - 2*s * oldAlpha' .* cos(oldPhi')  + (oldAlpha.^2)') .* (s*2*oldAlpha'.*sin(oldPhi'));
+                dA_dtheta_alpha = A .* ((2*s*oldAlpha' + 4*(oldAlpha').^3) ./ (s.^2 + 2*s*(oldAlpha').^2 + (oldAlpha').^4 + (oldPhi').^2));
+                dA_dtheta_phi = A .* (2*oldPhi' ./ (s.^2 + 2*s*(oldAlpha').^2 + (oldAlpha').^4 + (oldPhi').^2));
             end
             dA_dtheta = [dA_dtheta_a, dA_dtheta_alpha, dA_dtheta_phi, zeros(size(G_BLA, 1), size(oldB, 1))];
 
@@ -365,10 +237,10 @@ function eps = constrEps(G_BLA, G_var, s, oldA, oldAlpha, oldPhi, oldB)
             Are = 1;
             Acplx = 1;
             if size(oldA, 1) ~= 0
-                Are = prod(s - oldA', 2);
+                Are = prod(s + (oldA').^2, 2);
             end
             if size(oldAlpha, 1) ~= 0
-                Acplx = prod(s.^2 - 2*s*(oldAlpha' .* cos(oldPhi')) + (oldAlpha.^2)', 2);
+                Acplx = prod(s.^2 + 2*s*(oldAlpha').^2 + (oldAlpha').^4 + (oldPhi').^2, 2);
             end
             A = Are .* Acplx;
         % B:

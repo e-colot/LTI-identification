@@ -2,9 +2,6 @@ clear; close all; clc;
 
 fs = 5e3;
 
-Na = 3;
-Nb = 3;
-
 %% Get a non parametric model
 
 [f, G_BLA, total_var] = robustMethod("robustMethod/full_5k", fs);
@@ -16,30 +13,42 @@ Nb = 3;
     G_BLA = G_BLA(valid);
     total_var = total_var(valid);
 
-%% Obtain the ML estimate
+%% ML uncertainty estimate
+    [A_ML, ~, ~, p_var_ML] = ML(G_BLA, total_var, f, 3, 3);
 
-    [A, B, ~, thetaCov] = ML(G_BLA, total_var, f, Na, Nb);
+%% stable real ML uncertainty estimate
+    [A_SRML, ~, ~, p_var_SRML] = stableRealML(G_BLA, total_var, f, 2, 1);
 
-    poles = roots(A);
+%% optimal ML uncertainty estimate
+    [A_OML, ~, ~, p_var_OML] = optimalML(G_BLA, total_var, f, 3, 3);
 
-    df_dtheta = poles.^(0:Na);
-    df_dp = sum(((0:Na).*flipud(A)').*(poles.^(-1:Na-1)), 2);
+%% Disps
 
-    dp_dtheta = -df_dtheta./df_dp;
-
-      % split real and imaginary part
-      dp_dtheta = [real(dp_dtheta); imag(dp_dtheta)];
-
-    cov_p = dp_dtheta * thetaCov(1:Na+1, 1:Na+1) * dp_dtheta';
-
-      % p_var 1 line for each pole
-      % The first column contains the variance of the real part, the second
-      % column contains the one the imaginary part.
-    p_var = [diag(cov_p(1:Na, 1:Na)), diag(cov_p(Na+1:end, Na+1:end))];
-
-    for p = 1:Na
-        disp(['Standard deviation of pole ', num2str(p), ':']);
-        disp([num2str(sqrt(p_var(p, 1))), ' + j', num2str(sqrt(p_var(p, 2)))]);
+    poles = roots(A_ML);
+    disp('---------- ML estimator ----------');
+    for p = 1:length(poles)
+        disp(['Standard deviation of pole ', num2str(p), ' in ', num2str(poles(p)), ':']);
+        disp(num2str(sqrt(p_var_ML(p, 1)) + 1j *sqrt(p_var_ML(p, 2))));
         disp(' ');
     end
+    disp(' ');disp(' ');
 
+
+    poles = A_SRML;
+    disp('---------- stable real ML estimator ----------');
+    for p = 1:length(poles)
+        disp(['Standard deviation of pole ', num2str(p), ' in ', num2str(poles(p)), ':']);
+        disp(num2str(sqrt(p_var_SRML(p, 1)) + 1j *sqrt(p_var_SRML(p, 2))));
+        disp(' ');
+    end
+    disp(' ');disp(' ');
+
+
+    poles = A_OML;
+    disp('---------- optimal ML estimator ----------');
+    for p = 1:length(poles)
+        disp(['Standard deviation of pole ', num2str(p), ' in ', num2str(poles(p)), ':']);
+        disp(num2str(sqrt(p_var_OML(p, 1)) + 1j *sqrt(p_var_OML(p, 2))));
+        disp(' ');
+    end
+    disp(' ');disp(' ');

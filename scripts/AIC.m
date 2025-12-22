@@ -25,7 +25,7 @@ function [Na_opt, Nb_opt, A_opt, B_opt] = AIC(estimator, NaList, NbList, Ne)
                 continue;
             end
 
-            %disp(['Trying Na=', num2str(Na), ', Nb=', num2str(Nb)]);
+            disp(['Trying Na=', num2str(Na), ', Nb=', num2str(Nb)]);
             [A, B, cost] = estimator(Na, Nb);
 
 
@@ -51,6 +51,7 @@ function [Na_opt, Nb_opt, A_opt, B_opt] = AIC(estimator, NaList, NbList, Ne)
 
     figure;
     surf(Nb_grid, Na_grid, AICdb, 'EdgeColor', 'none');
+    colormap(copper);
     xlabel('n_{b}');
     ylabel('n_{a}');
     zlabel('AIC cost [dB]');

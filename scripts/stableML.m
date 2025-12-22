@@ -1,4 +1,4 @@
-function [A, B, cost, K] = stableML(G_BLA, G_var, f, Na, Nb, show)
+function [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, show)
 % [A, B, cost] = stableML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator that imposes 
 % stable poles. The starting value for theta is computed using a GTLS 
@@ -21,13 +21,16 @@ function [A, B, cost, K] = stableML(G_BLA, G_var, f, Na, Nb, show)
     oldB = flipud(Bgtls);
         % scale B to adapt
         oldB = oldB / Agtls(1);
-    oldCost = inf;
+
     itrCnt = 1;
 
     thetaChange = 0;
 
       % impose negative roots
       oldA = -abs(real(oldA)) + 1j * imag(oldA);
+
+    epsilon = constrEps(G_BLA, G_var, s, oldA, oldB, Nb);
+    oldCost = epsilon' * epsilon;
 
 %% Newton-Gauss method
 

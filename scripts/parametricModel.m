@@ -58,8 +58,7 @@ save("../results/parametricWorkspace.mat");
     plot(f, db(G_BLA), 'o', LineWidth=1.5);
     hold on;
     subplot(212);
-      % "cheating" to avoid phase jumps between +pi and -pi
-    plot(f, angle(G_BLA)+2*pi*(angle(G_BLA) < -1), 'o', LineWidth=1.5);
+    plot(f, unwrap(angle(G_BLA)), 'o', LineWidth=1.5);
     hold on;
     plotTF(A_optLLS, B_optLLS, f);
     plotTF(A_optTLS, B_optTLS, f);

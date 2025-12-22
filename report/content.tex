@@ -309,10 +309,12 @@ with
 The parameter $r$ is chosen in $[0; 1]$ where a value close to $0$ corresponds to the GTLS estimator. It is then applied iteratively until the new cost is greater or equal to the previous one.
 
 \subsubsection{Maximum Likelyhood Estimator (ML)}
+\label{sec:ML}
 
 This estimator maximizes the probability that the parameters $\theta_{\text{ML}}$ generated the measured data, and is therefore mathematically the best. It is however nonlinear and must be solved iteratively, just as for the BTLS. Its cost function is
 \begin{equation}
     V_{\text{ML}} = \frac{1}{2} \sum_k \frac{|E(k)|^2}{\sigma_e^2(k)}
+    \label{eq:ML_cost}
 \end{equation}
 and the parameter update $\Delta \theta$ is given by
 \begin{equation}
@@ -476,17 +478,210 @@ The resulting standard deviation on the real part of the two poles in the right 
 
 For reference, the third pole of the ML estimator, which is visible on the extreme left of Fig.~\ref{fig:rlocus2} has a standard deviation of $\approx 14500$~rad/s. An expected result is the uncertainty on the imaginary port of this pole. Because it is alone, it lays on the real axis and the computed variance is exactly zero. These two clues combined implies that there is definitely a pole on the real axis, but it's exact frequency cannot be extracted from the measured data.
 
-\subsection{Stable ML Estimators}
+\subsection{Stable ML Estimator}
+\label{sec:Stable_estimator}
 
-To obtain a parametric FRF estimate with a stable model, the model~(\ref{eq:TF_general_form}) is changed to impose poles in the left half-plane. The transfer function now becomes
+To obtain a parametric FRF estimate with a stable model, the model~(\ref{eq:TF_general_form}) is replaced by:
 \begin{equation}
-    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=0}^{n_a} (s-\alpha_k)}.
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_a} (s-\alpha_k)}.
     \label{eq:TF_stable_model}
 \end{equation}
+With now $\theta = [\theta_\alpha \quad \theta_b]^T$, the poles are a direct parameter and they can be constrained. Before looking to the way of constraining them, let's see how the use of the new model~(\ref{eq:TF_stable_model}) impacts the ML algorithm briefly described in Sec.~\ref{sec:ML}.
 
+$B_k$ and it's derivatives stay unchanged, except that the length of $\theta$ now becomes $n_a+n_b+1$, because explicitly writing the poles removes a parameter\footnote{It is worth noticing that this allows to remove the constraint on $||\theta||_2^2$, without which the the cost function was unconstrained because of the extra degree of freedom ($n_a+n_b+2$ parameters).}. On the other hand, we now have
+\begin{equation}
+    A_k = \prod_{i} (s_k-\alpha_i),
+\end{equation}
+and it's gradient along $\theta_\alpha$:
+\begin{equation}
+    \frac{\partial A_k}{\partial \theta_\alpha} = - A_k \begin{bmatrix}
+        \frac{1}{(s_k - \alpha_1)} & \cdots & \frac{1}{(s_k - \alpha_{n_a})}
+    \end{bmatrix}^T.
+\end{equation}
+Once the parameters update is computed by~(\ref{eq:ML_update}), $\Delta \theta$ is scaled such that the poles stay in the left half-plane. It is implemented as follows:
+\begin{equation}
+    \theta^{i+1} = \theta^i + k \Delta \theta
+\end{equation}
+where 
+\begin{equation}
+    k = \min\Bigg(1, \frac{-\Re\Big\{\alpha_j^ i\Big\}}{\Re\Big\{\alpha_j^{i+1}\Big\} - \Re\Big\{\alpha_j^i\Big\}}\Bigg)
+    \label{eq:delta_theta_limit}
+\end{equation}
+for every pole $\alpha_j$ such that $\Re\Big\{\alpha_j^{i+1}\Big\} > 0$. A second approach could have been to limit only the poles that would cross the imaginary axis but this would have been equivalent to not follow the gradient anymore, losing the interest of using a maximum likelihood estimator. The resulting FRF is compared with the one obtained without constraining the poles in Fig.~\ref{fig:FRF_stable_ML}.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/FRF_stable_ML.png}
+    \caption{Comparison of the estimated FRF of the ML and the stable ML algorithms.}
+    \label{fig:FRF_stable_ML}
+\end{figure}
 
+This estimator, called \textit{stable ML} is however not useful. If it does impose poles with a negative real value, it cannot be applied while enforcing real parameters as the poles $\alpha_1, \cdots, \alpha_{n_a}$ need to be complex. The resulting parameter vector can therefore not be written again in the general form~(\ref{eq:TF_general_form}) with real values for $a_k$ and $b_k$.
 
+\subsection{Stable Real ML Estimator}
+\label{sec:stable_real_estimator}
 
+This section starts from what has been done is Sec.~\ref{sec:Stable_estimator} and improves it to end up with real parameters, while maintaining stable poles, hence the name \textit{Stable Real ML} estimator.
 
+The transfer function takes the form
+\begin{equation}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_{a, \text{re}}} (s-a_k) \prod_{k=1}^{n_{a, \text{cplx}}} (s^2 - 2 s \alpha_k \cos \phi_k + \alpha_k^2)},
+    \label{eq:TF_stable_real_model}
+\end{equation}
+such that it's poles are given by $a_k$ and $\alpha_k e^{\pm j \phi_k}$. The parameters have now become 
+\begin{equation}
+    \theta = \begin{bmatrix}
+        a_k & \alpha_k & \phi_k & b_k
+    \end{bmatrix}^T.
+    \label{eq:theta_stable_real}
+\end{equation}
+This new model implies the following changes:
+\begin{gather}
+    A_k = \prod_{i} (s_k-a_i) \prod_{i} (s_k^2 - 2 s_k \alpha_i \cos \phi_i + \alpha_i^2),\\
+    \frac{\partial A_k}{\partial \theta_a} = -A_k \begin{bmatrix}
+        \cdots & \frac{1}{(s_k-a_i)} & \cdots
+    \end{bmatrix}^T,\\
+    \frac{\partial A_k}{\partial \theta_\alpha} = 2 A_k \begin{bmatrix}
+        \cdots & \frac{\alpha_i - s_k \cos \phi_i}{(s_k^2 - 2 s_k \alpha_i \cos \phi_i + \alpha_i^2)} & \cdots
+    \end{bmatrix}^T, \\
+    \frac{\partial A_k}{\partial \theta_\phi} = 2 A_k \begin{bmatrix}
+        \cdots & \frac{s_k \alpha_i \sin \phi_i}{(s_k^2 - 2 s_k \alpha_i \cos \phi_i + \alpha_i^2)} & \cdots
+    \end{bmatrix}^T.
+\end{gather}
+This model allows complex poles which are complex conjugates, while keeping the parameters real. However, constraining the poles to the left half-plane is still done by limiting $\Delta \theta$ with~(\ref{eq:delta_theta_limit}), which truncates the set of acceptable solutions in an artificial way.
+
+Before adding another layer of complexity to cure this, let's rapidly discuss the results of this estimator. The optimal order is way higher than the one computed by the ML estimator. However, there is no big difference between the optimal AIC cost and the one on the flat region at lower orders, as shown on Fig.~\ref{fig:AIC_stable_real_ML}. The hope is that an improved model might be able to reach a lower cost in the region of lower order.
+
+The final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs}. The stable real ML estimate shown on Fig.~\ref{fig:FRF_stable_real_ML} is already a better match than Fig.~\ref{fig:FRF_stable_ML}, which is surprising as the set of admissible solutions is reduced by imposing complex conjugate poles and zeros. 
+
+\begin{table}
+    \centering
+    \caption{Maximum Likelihood Cost Comparison}
+    \begin{tabular}{|c|c|}
+    \hline
+    \textbf{Estimator} & \textbf{ML Cost} \\
+    \hline
+    ML & $822$ \\
+    Optimal ML & $25\,345$ \\
+    Stable Real ML & $27\,107$ \\
+    Stable ML & $35\,941$ \\
+    \hline
+    \end{tabular}
+    \label{tab:ML_costs}
+\end{table}
+
+To explain why it performs better than the stable ML estimator, it could be that the jacobian pushes the poles to the right half-plane, which violates the constraints faster for the latter and stops it at a higher cost.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/AIC_stable_real_ML.png}
+    \caption{AIC cost of the stable real ML estimator. The optimal order is circled in red.}
+    \label{fig:AIC_stable_real_ML}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/FRF_stable_real_ML.png}
+    \caption{Comparison of the estimated FRF of the ML and the stable real ML algorithms.}
+    \label{fig:FRF_stable_real_ML}
+\end{figure}
+
+\subsection{Optimal ML Estimator}
+
+This estimator is called \textit{optimal ML} as it removes the need for hand crafted constraints. This is done by manipulating~(\ref{eq:TF_stable_real_model}) so its poles can no longer have a positive real part. It results in
+\begin{equation}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_{a, \text{re}}} (s+a_k^2) \prod_{k=1}^{n_{a, \text{cplx}}} (s^2 + 2 s \alpha_k^2 + \alpha_k^4 + \phi_k^2)},
+    \label{eq:TF_optimal_model}
+\end{equation}
+and for the same parameter vector $\theta$ as in~(\ref{eq:theta_stable_real}),
+\begin{gather}
+    A_k = \prod_{i} (s_k+a_i^2) \prod_{i} (s_k^2 + 2 s_k \alpha_i^2 + \alpha_i^4 + \phi_i^2),\\
+    \frac{\partial A_k}{\partial \theta_a} = 2 A_k \begin{bmatrix}
+        \cdots & \frac{a_i}{(s_k+a_i^2)} & \cdots
+    \end{bmatrix}^T,\\
+    \frac{\partial A_k}{\partial \theta_\alpha} = 2 A_k \begin{bmatrix}
+        \cdots & \frac{s_k\alpha_i + 2\alpha_i^3}{(s_k^2 + 2 s_k \alpha_i^2 + \alpha_i^4 + \phi_i^2)} & \cdots
+    \end{bmatrix}^T, \\
+    \frac{\partial A_k}{\partial \theta_\phi} = 2 A_k \begin{bmatrix}
+        \cdots & \frac{\phi_i}{(s_k^2 + 2 s_k \alpha_i^2 + \alpha_i^4 + \phi_i^2)} & \cdots
+    \end{bmatrix}^T.
+\end{gather}
+
+To conclude the presentation of this estimator, it uses as initial parameters the results of the stable real ML estimator of Sec.~\ref{sec:stable_real_estimator}.
+
+Even though it was never mentioned in this report, the norm of $\Delta \theta$ at the end of the Newton-Gauss iteration has always been checked and was determined to be low enough so a second loop using the Levenberg-Marquardt (LM) algorithm was never used.
+
+This norm was however not negligible with this optimal ML estimator so the LM was implemented and "retro-fitted" to every ML estimator. The most complicated part was the determination of a convergence condition and it was decided to be a minimal threshold on the relative change of the parameters:
+\begin{equation}
+    \frac{||\Delta\theta||}{||\theta||} \leq 10^{-12}
+\end{equation}
+
+The cost improve between the stable real estimator and this one is quite small, as shown in Table~\ref{tab:ML_costs}. Visually, the phase estimate is way worse going from Fig.~\ref{fig:FRF_stable_real_ML} to Fig.~\ref{fig:FRF_optimal_ML} but the overshoot at the oscillation frequency is lower, resulting in a smaller cost.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/FRF_optimal_ML.png}
+    \caption{Comparison of the estimated FRF of the ML and the optimal ML algorithms.}
+    \label{fig:FRF_optimal_ML}
+\end{figure}
+
+The optimal orders of the ML estimators shown on Fig.~\ref{fig:optimal_order_ML} show that the stable real ML estimate is still a decent choice of model as its ML cost is close to the one of the optimal ML but it needs 2 parameters less.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pictures/optimalOrderML.png}
+    \caption{Optimal orders for each variant of the ML estimator, according to the AIC criterion. The red dashed line is the stability limit $n_a = n_b$.}
+    \label{fig:optimal_order_ML}
+\end{figure}
+
+A final note can be made about the uncertainty on the poles of the SRML and OML estimators. Their expressions link directly the parameters to the poles so their gradients $\partial p / \partial \theta$ are block matrices. They are structurally described here, just to give an insight on how they are built.
+\begin{gather}
+    \frac{\partial p_{\text{SRML}}}{\partial \begin{bmatrix}
+        \theta_a & \theta_\alpha & \theta_\phi
+    \end{bmatrix}} = \begin{bmatrix}
+        I & &\\
+        & \text{diag}_i \Big(e^{j\phi_i}\Big) & \text{diag}_i \Big(j\alpha_i e^{j\phi_i}\Big)\\
+        & \text{diag}_i \Big(e^{-j\phi_i}\Big) & \text{diag}_i \Big(-j\alpha_i e^{-j\phi_i}\Big)\\
+    \end{bmatrix} \notag \\
+    \frac{\partial p_{\text{OML}}}{\partial \begin{bmatrix}
+        \theta_a & \theta_\alpha & \theta_\phi
+    \end{bmatrix}} = \begin{bmatrix}
+        \text{diag}_i \Big(-2a_i\Big) & &\\
+        & \text{diag}_i \Big(-2\alpha_i\Big) & j I\\
+        & \text{diag}_i \Big(-2\alpha_i\Big) & -j I\\
+    \end{bmatrix} \notag 
+\end{gather}
+
+And finally, the resulting standard deviation of the poles are given in Table~\ref{tab:ML_pole_stddev}. It can be observed that the standard deviation of the complex conjugate poles (responsible for the oscillation) of the OML estimator is higher than with SRML. 
+
+\begin{table}[h!]
+    \centering
+    \caption{Standard deviation of estimated poles for SRML and OML}
+    \label{tab:ML_pole_stddev}
+    \begin{tabular}{l c c}
+    \hline
+    \textbf{Estimator} & \textbf{Pole location} & \textbf{Std. deviation} \\
+    \hline
+    SRML 
+    & $-12.1855 + j\,442.5608$ 
+    & $0.1416 + j\,0.1165$ \\
+
+    SRML 
+    & $-12.1855 - j\,442.5608$ 
+    & $0.1416 + j\,0.1165$ \\
+    \hline
+    OML 
+    & $-1153.1149$ 
+    & $22.7454$ \\
+
+    OML 
+    & $-14.1987 + j\,444.4559$ 
+    & $0.3500 + j\,0.1980$ \\
+
+    OML 
+    & $-14.1987 - j\,444.4559$ 
+    & $0.3500 + j\,0.1980$ \\
+    \hline
+    \end{tabular}
+\end{table}
 
