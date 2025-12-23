@@ -660,7 +660,7 @@ The resulting poles are in $-a_k^2$ and $-\alpha_k^2 \pm j\phi_k$. For the same 
 
 It uses as initial parameters the results of the SRML estimator of Sec.~\ref{sec:SRML}. Even though it was never mentioned in this report, the norm of $\Delta \theta$ at the end of the Newton-Gauss iteration has always been checked and was determined to be low enough so a second loop using the Levenberg-Marquardt (LM) algorithm was never used.
 
-This norm was however not negligible with this OML estimator so the LM was implemented and "retro-fitted" to every ML estimator. The most complicated part was the determination of a convergence condition and it was decided to be a minimal threshold on the relative change of the parameters:
+This norm was however not negligible with the OML estimator so the LM was implemented and "retro-fitted" to each ML estimator. The most complicated part was the determination of a convergence condition and it was decided to be a minimal threshold on the relative change of the parameters:
 \begin{equation}
     \frac{||\Delta\theta||}{||\theta||} \leq 10^{-12}
 \end{equation}
@@ -704,7 +704,7 @@ A final note can be made about the uncertainty on the poles of the SRML and OML 
 \end{gather}
 
 And finally, the resulting standard deviation of the poles are given in Table~\ref{tab:ML_pole_stddev}. It can be observed that the standard deviation of the complex conjugate poles (responsible for the oscillation) of the OML estimator is higher than with SRML. 
-The OML model benefits from this lower uncertainty as it is known to produce the peak observed in the FRF according to standard system theory.
+It is yet another good point for the SRML model, which benefits from this lower uncertainty as it can better locate the resonance frequency of the systemS. It is indeed known to produce the peak observed in the FRF according to standard system theory.
 
 \begin{table}
     \centering
