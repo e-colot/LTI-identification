@@ -1,5 +1,5 @@
-function [A, B, cost, p_var] = stableRealML(G_BLA, G_var, f, Na, Nb, show)
-% [A, B, cost, p_var] = stableML(G_BLA, G_var, f, Na, Nb, [show])
+function [A, B, cost, p_var] = SRML(G_BLA, G_var, f, Na, Nb, show)
+% [A, B, cost, p_var] = SML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator that imposes 
 % stable poles. The starting value for theta is computed using a GTLS 
 % estimator

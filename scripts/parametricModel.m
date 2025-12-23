@@ -79,7 +79,8 @@ save("../results/parametricWorkspace.mat");
         xlim([f(1) f(end)]);
         grid on;
 
-    % model orders on a plot
+%% model orders on a plot
+Na_optLLS = 35; Nb_optLLS = 32; % computed with large Na_max and Nb_max, hardcoded for speed
     figure;
     hold on;
     plot(Na_optLLS, Nb_optLLS, 'o', Color=colors(2, :), MarkerSize=8, DisplayName='LLS', LineWidth=2);
@@ -87,15 +88,15 @@ save("../results/parametricWorkspace.mat");
     plot(Na_optGTLS, Nb_optGTLS, '^', Color=colors(4, :), MarkerSize=8, DisplayName='GTLS', LineWidth=2);
     plot(Na_optBTLS, Nb_optBTLS, 'd', Color=colors(5, :), MarkerSize=8, DisplayName='BTLS', LineWidth=2);
     plot(Na_optML, Nb_optML, 'v', Color=colors(6, :), MarkerSize=8, DisplayName='ML', LineWidth=2);
-    plot([0 16], [0 16], 'r--','HandleVisibility','off');
+    plot([0 40], [0 40], 'r--','HandleVisibility','off');
     xlabel('Optimal Model Order n_a');
     ylabel('Optimal Model Order n_b');
     legend('Location', 'best');
     grid on;
-    xlim([0 16]);
-    ylim([0 16]);
+    xlim([0 40]);
+    ylim([0 40]);
 
-        % poles and zeros on plots
+%% poles and zeros on plots
     figure;
     hold on;
     poles_LLS = roots(A_optLLS);

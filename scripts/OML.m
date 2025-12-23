@@ -1,5 +1,5 @@
-function [A, B, cost, p_var] = optimalML(G_BLA, G_var, f, Na, Nb, show)
-% [A, B, cost, p_var] = stableML(G_BLA, G_var, f, Na, Nb, [show])
+function [A, B, cost, p_var] = OML(G_BLA, G_var, f, Na, Nb, show)
+% [A, B, cost, p_var] = SML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator that imposes 
 % stable poles. The starting value for theta is computed using a GTLS 
 % estimator
@@ -17,7 +17,7 @@ function [A, B, cost, p_var] = optimalML(G_BLA, G_var, f, Na, Nb, show)
     end
 
     s = 1j*2*pi*f;
-    [oldA, oldB, ~] = stableRealML(G_BLA, G_var, f, Na, Nb);
+    [oldA, oldB, ~] = SRML(G_BLA, G_var, f, Na, Nb);
     oldB = flipud(oldB);
 
     itrCnt = 1;

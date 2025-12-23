@@ -10,7 +10,7 @@ The objective will be to identify the linear part of the system and to have a me
 
 The measurement device (referred to as the \textit{PXI setup}) allows to send only multisines and their RMS value cannot exceed $1$~V. Its ADCs have a range that can be chosen and can sample at high frequencies ($> 1$~GHz).
 
-This report deliberately focusses on the theoretical points and the results rather than the implementation because the Matlab scripts and the measured data are available on GitHub\footnote{https://github.com/e-colot/LTI-identification}. 
+This report deliberately focusses on the theoretical points and the results rather than the implementation because the Matlab™ scripts and the measured data are available on GitHub\footnote{https://github.com/e-colot/LTI-identification}. 
 
 
 
@@ -18,7 +18,7 @@ This report deliberately focusses on the theoretical points and the results rath
 
 \section{Excitation Signal}
 
-Before making any useful measurement, the parameters of the excitation signal must be chosen to match to the DUT parameters.The rms of the applied signal must indeed be determined to use the full range of the ADC while avoiding saturation of the system. The poles of the system must also be roughly known to determine the band of interest, making sure that the system's dynamics are measured.
+Before making any useful measurement, the parameters of the excitation signal must be chosen to match the DUT parameters. The rms of the applied signal must indeed be determined in order to use the full range of the ADC. This minimizes the quantization error and removes any saturation issue. The resonance frequency of the system must also be roughly known to determine the band of interest, making sure that the system's dynamics are measured.
 
 
 
@@ -30,13 +30,13 @@ To determine the sampling frequency, a multisine excited up to $40$~kHz has been
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/frequencyScan.png}
-    \caption{Excitation spectrum (top) and output spectrum (bottom).}
+    \caption{Excitation spectrum (top) and output spectrum (bottom) for a fully excited multisine.}
     \label{fig:frequency_scan}
 \end{figure}
 
-The measured input spectrum is not flat because of the ZOH: the continuous signal is discretized by the \textit{PXI setup} and the hold operation is equivalent with a sinc filtering in frequency. This effect could be reduced with a higher sampling frequency.
+The measured input spectrum is not flat because of the ZOH: the true input is discretized by the \textit{PXI setup} and the hold operation is equivalent to a sinc filtering in frequency. This effect could be reduced with a higher sampling frequency.
 
-The output spectrum shows that the system's dynamics happen at frequencies below $\sim 1.25$~kHz. The excitation signals used will therefore stop at this frequency. To mitigate the effect of the ZOH, the sampling frequency is set to $5$~kHz.
+The output spectrum shows that the \textit{interesting} part happens at frequencies below $\sim 1.25$~kHz. The excitation signals used will therefore stop at this frequency. To mitigate the effect of the ZOH, the sampling frequency is set to $5$~kHz.
 
 
 \subsection{Amplitude}
@@ -44,20 +44,20 @@ The output spectrum shows that the system's dynamics happen at frequencies below
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/outputSignal.png}
-    \caption{Excitation signal (left) and output signal (right).}
+    \caption{Excitation signal (left) and output signal (right) in the time domain.}
     \label{fig:output_signal}
 \end{figure}
 
-The same signal as the one measured for Sec.~\ref{sec:Band_of_interest} but is shown in the time domain in Fig.~\ref{fig:output_signal}. It can be seen that the input signal do not go higher than $5$~V and the output voltage does not cross $1$~V. This allowed to set the range of the ADCs of the \textit{PXI setup}.
+The same signal as the one measured for Sec.~\ref{sec:Band_of_interest} has been used here, but shown in the time domain on Fig.~\ref{fig:output_signal}. It can be seen that the input signal do not go higher than $5$~V and the output voltage does not cross $1$~V. This allowed to set the range of the ADCs of the \textit{PXI setup}.
 
 \subsection{Transient Removal}
 
 Because only multisines can be applied, every measurement is done for multiple periods and the first ones are systematically removed until the transient is removed. To check this, the difference between each period is plotted, as shown in Fig.~\ref{fig:transient_removal} and periods are removed until the shown plot is reduced to a flat curve.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/transientRemoval.png}
-    \caption{Difference between $1^{\text{st}}$ and $2^{\text{nd}}$ periods of the output signal in time domain.}
+    \caption{Difference between $1^{\text{st}}$ and $2^{\text{nd}}$ periods of the output signal in time domain for a measure of the transient.}
     \label{fig:transient_removal}
 \end{figure}
 
@@ -77,9 +77,9 @@ Two methods are used to distinguish the nonlinear distortions from the noise. Th
 
 \subsection{Fast Method}
 
-The excitation signal is an odd multisine with holes. This means that only odd frequencies are excited and some of those odd frequencies are also unexcited in order to have a measure for odd nonlinear distortions. During the excitation generation, 1 odd bin out of 4 is randomly chosen to be not excited. 
+The excitation signal is an odd multisine with holes, which is repeated a few times. This means that only odd frequencies are excited and some of those odd frequencies are also unexcited in order to have bins containing odd nonlinear distortion. During the excitation generation, 1 odd bin out of 4 is randomly chosen to be not excited. 
 
-The FFT of multiple periods are taken, effectively dividing the spectral resolution as $\Delta_f = f_s / N$ with a larger $N$. The added bins are not linear combinations of input frequencies and therefore only contain noise, under the assumption that the DUT is a \textit{PISPO}\footnote{period in, same period out} system.
+The FFT of the multiple periods is taken, effectively dividing the spectral resolution as $\Delta_f = f_s / N$ with a larger $N$. The added bins are not linear combinations of input frequencies and therefore only contain noise, under the assumption that the DUT is a \textit{PISPO}\footnote{period in, same period out} system.
 
 The spectrum of the output signal is then divided into 4 categories:
 \begin{itemize}
@@ -89,10 +89,10 @@ The spectrum of the output signal is then divided into 4 categories:
     \item \textbf{Noise}, for bins that are added by the multiple periods.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/fastMethod1.png}
-    \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback}).}
+    \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback}). No FRF is computed because the one given by the robust method will be more useful in Sec.~\ref{sec:BLA}.}
     \label{fig:fast_method}
 \end{figure}
 
@@ -100,54 +100,58 @@ Fig.~\ref{fig:fast_method} shows that even distortion is close to the noise leve
 
 This behavior is explained by~(\ref{eq:NL_feedback}): because the third power of the output is fed back to the input, it contains sinusoids at the sum of 3 frequencies of the output. As the output only contains odd frequencies, it results in another odd frequency and the main nonlinearities therefore appears at odd bins.
 
-To validate this explanation, the same experiment has been applied to the system with this time as feedback
+To validate this explanation, the same experiment has been repeated with a modified system whose feedback follows
 \begin{equation}
-    y(t) = u^2(t),
+    y(t) = u^2(t).
     \label{eq:NL_feedback_even}
 \end{equation}
 
-which gave the results shown in Fig.~\ref{fig:fast_method_even}.
+The results are shown in Fig.~\ref{fig:fast_method_even} and because feedback now excites even frequencies, the odd and even distortions are now at the same level.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/fastMethodEven.png}
     \caption{Results of the fast method with the feedback given by~(\ref{eq:NL_feedback_even}).}
     \label{fig:fast_method_even}
 \end{figure}
 
-The feedback now excites even frequencies and therefore has more even distortions than the one of Fig.~\ref{fig:fast_method}.
+
 
 
 
 
 \subsection{Robust Method}
 
-This method relies on computing a FRF for each of the $P$ periods and the $M$ realizations. The variance across the periods for realization $m$ is called $\hat{\sigma}^{2 [m]}_n$ and is only due to noise. This is because the nonlinear contributions are deterministic and depend only on the input signal, which is the same for the whole realization.
+The excitation is a full multisine (excited up to $1.25$~kHz as explained in Sec.~\ref{sec:Band_of_interest}) repeated $P$ times. The phases are randomly selected and are recomputed for each of the $M$ realizations. The robust method relies on computing a FRF for each of the $P\times M$ periods, given by~(\ref{eq:G_mp_robust_method}). The variance across the periods for realization $m$, computed by~(\ref{eq:noiseVar_robust_method}), is only due to noise. This is because the nonlinear contributions are deterministic and depend only on the input signal, which is the same for the whole realization.
 \begin{equation}
     \hat{G}^{[m, p]} = \frac{Y^{[m, p]}}{U^{[m]}}
+    \label{eq:G_mp_robust_method}
 \end{equation}
-\begin{gather}
-    \hat{G}^{[m]} = \frac{1}{P} \sum_{p=1}^P \hat{G}^{[m, p]}\\ 
-    \hat{\sigma}^{2 [m]}_n = \frac{1}{P(P-1)} \sum_{p=1}^{P} \left| \hat{G}^{[m, p]} - \hat{G}^{[m]}\right|^2
-\end{gather}
-
-These noise variances on a single realization $\hat{\sigma}^{2 [m]}_n$ are then averaged across the realizations and divided by M because the averaging reduces the variance. This gives the total noise variance $\sigma^2_n$.
 \begin{equation}
-    \hat{\sigma}^2_n = \frac{1}{M^2} \sum_{m=1}^{M} \hat{\sigma}^{2 [m]}_n
+    \hat{G}^{[m]} = \frac{1}{P} \sum_{p=1}^P \hat{G}^{[m, p]}
+    \label{eq:noiseVar_robust_method}
+\end{equation}
+\begin{equation}
+    \hat{\sigma}^{2 [m]}_n = \frac{1}{P(P-1)} \sum_{p=1}^{P} \left| \hat{G}^{[m, p]} - \hat{G}^{[m]}\right|^2
 \end{equation}
 
-The averaged FRF of a single realization $\hat{G}^{[m]}$ does not contain noise (at least in expected value). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
+These noise variances on a single realization are then averaged across the realizations and divided by M because the averaging reduces the variance. This gives the total noise variance $\sigma^2_n$:
+\begin{equation}
+    \hat{\sigma}^2_n = \frac{1}{M^2} \sum_{m=1}^{M} \hat{\sigma}^{2 [m]}_n.
+\end{equation}
+
+The averaged FRF of a single realization $\hat{G}^{[m]}$ does not contain noise (at least in expected value and for zero-mean noise). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion only and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
 \begin{gather}
-    \hat{G}_{\text{ML}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]}\\
-    \hat{\sigma}_{\text{ML}} = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{ML}}\right|^2
+    \hat{G}_{\text{BLA}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]}\\
+    \hat{\sigma}_{\text{dist}}^2 = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{BLA}}\right|^2
 \end{gather}
 
-A full multisine (excited up to $1.25$~kHz as explained in Sec.~\ref{sec:Band_of_interest}) has been applied to the DUT for $P=20$ periods and $M=20$ realizations. The results are shown on Fig.~\ref{fig:robust_method}.
+The estimated FRF and the distortion estimates are shown on Fig.~\ref{fig:robust_method} with the total variance $\hat{\sigma}_\text{tot}^2$ being the sum of both
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/robustMethod.png}
-    \caption{Results of the robust method, with the FRF estimate (top) and the estimated variances (bottom).}
+    \caption{Results of the robust method, with the FRF estimate (top) and the estimated variances (bottom). The total variance is simply equal to the sum of the noise and distortion variances}
     \label{fig:robust_method}
 \end{figure}
 
@@ -164,8 +168,11 @@ A full multisine (excited up to $1.25$~kHz as explained in Sec.~\ref{sec:Band_of
 
 
 \section{Best Linear Approximation}
+\label{sec:BLA}
 
-A linearized model of the system can be determined to approximate the DUT as an LTI. The best linear approximation, or BLA, is therefore computed as the "best fit". Because nonlinear distortions are dependent on the input signal, the BLA computed here is valid for excitation signals with a similar \textit{Riemann equivalent spectrum}. 
+A linearized model of the system can be determined to approximate the DUT as an LTI. The best linear approximation, or BLA, is therefore computed as the "best fit". Because nonlinear distortions are dependent on the input signal, the BLA computed here is valid for excitation signals with a similar \textit{Riemann equivalent spectrum}.
+
+It is here mentioned but as there is no use of the deducted model, there is no interest in defining the category of excitations for which the model can be considered valid.
 
 
 
@@ -181,24 +188,27 @@ The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fac
 \subsection{Generalities About Parametric Identification}
 \label{sec:parametric_model}
 
-Based on the nonparametric model of Sec.~\ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model. This will be fixed by the order of the numerator and denominator of the transfer function, respectively $n_b$ and $n_a$ giving the following expression
+Based on the nonparametric model of Sec.~\ref{sec:non_parametric_model}, a parametric model can be derived by making a choice for the model structure. A practical choice is a polynomial model~(\ref{eq:TF_parametric_model}), in which $n_a$ and $n_b$ are the model order.
 
 \begin{equation}
     G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\sum_{k=0}^{n_a} a_k s^k}.
-    \label{eq:TF_general_form}
+    \label{eq:TF_parametric_model}
 \end{equation}
 
 Different estimators are used but first, a few tricks are used for each of them and those are explained here.
 
-\paragraph{Normalization by rms scaling} Each estimator has a regressor matrix ($H$ or $J$), whose columns often have different orders of magnitude. This results in a poor conditioning and gives numerical errors. To resolve this, a change of coordinates is applied with the scaling matrix $S$, which scales the columns. The original coordinates $H$ (or $J$) and $\theta$ are replaced by $\tilde{H}$ (or $\tilde{J}$) and $\tilde{\theta}$.
-\begin{gather}
-    y = H \times \theta \\
-    \Rightarrow y = \tilde{H} \times \tilde{\theta} \qquad \text{with} \qquad \tilde{H} = H \times S
-\end{gather}
+\paragraph{Normalization by rms scaling} Each estimator has a regressor matrix ($H$ or $J$), whose columns often have different orders of magnitude. This results in a poor numerical conditioning. To solve this, a change of coordinates is applied with the scaling matrix $S$, which scales the columns. The original coordinates $H$ (or $J$) and $\theta$ are replaced by $\tilde{H}$ (or $\tilde{J}$) and $\tilde{\theta}$.
+\begin{equation}
+    y = H \theta
+\end{equation}
+then becomes
+\begin{equation}
+    y = \tilde{H} \tilde{\theta} \qquad \text{with} \qquad \tilde{H} = H S
+\end{equation}
 \vspace{-0.8cm}
 \begin{align}
-    &\Leftrightarrow \tilde{\theta} = S^{-1} \times \theta\\
-    &\Leftrightarrow \theta = S \times \tilde{\theta}
+    &\Leftrightarrow \tilde{\theta} = S^{-1} \theta\\
+    &\Leftrightarrow \theta = S \tilde{\theta}
 \end{align}
 $S$ has been chosen to be a diagonal matrix with as elements the inverse of the rms of the columns of $H$, such that it is invertible
 \begin{equation}
@@ -207,22 +217,22 @@ S = \operatorname{diag}\!\left( \frac{1}{\mathrm{rms}\bigl(H_{:,1}\bigr)}, \dots
 
 \paragraph{Use of the nonparametric estimate} All the estimators are relying on approaching the following, which arises from the definition of a transfer function. The key idea is to notice that because
 \begin{equation}
-    Y(k) = G_{\text{BLA}}(k) \times U(k),
+    Y(k) = G_{\text{BLA}}(k) U(k),
 \end{equation}
 a clever choice of $U$ simplifies the choice of $Y$, as
 \begin{equation}
     U(k) = 1 \quad \forall k \quad \Rightarrow \quad Y(k) = G_{\text{BLA}}(k).
 \end{equation}
 
-\paragraph{Forcing real valued parameters} A real system is described by real coefficients so the imaginary part of $\theta$ must be equal to $0$. The regressor must therefore be changed. $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$ as follows
+\paragraph{Forcing real valued parameters} A real system is described by real coefficients for a polynomial model~(\ref{eq:TF_parametric_model}) so $\theta$ must be real. The regressor must therefore be changed. $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$ as follows
 \begin{equation}
     y_{\text{re}} = \begin{bmatrix}
         \Re\left\{y\right\}\\
         \Im\left\{y\right\}
-    \end{bmatrix}, \quad \text{and} \quad H_{\text{re}} = \begin{bmatrix}
+    \end{bmatrix} \quad \text{and} \quad H_{\text{re}} = \begin{bmatrix}
         \Re\left\{H\right\}\\
         \Im\left\{H\right\}
-    \end{bmatrix}
+    \end{bmatrix}.
 \end{equation}
 
 The covariance matrix $C_J$ used in the GTLS estimator in Sec.~\ref{sec:GTLS} must also be replaced with
@@ -256,7 +266,7 @@ It minimizes the same cost function
 \begin{equation}
     V_{\text{TLS}} = \sum_{k} |E(k)|^2,
 \end{equation}
-but there is another constraint which does not require $a_0$ to be different from $0$, given by
+but there is another constraint which does not require $a_0$ to be different from $0$, stated as
 \begin{equation}
     ||\theta_{\text{TLS}}||_2^2 = 1.
 \end{equation}
@@ -268,16 +278,16 @@ where $J$ is the regression matrix such that
 \begin{equation}
     E = J \theta_{\text{TLS}}
 \end{equation}
-and $V_{\tilde{J}_{\text{re}}}$ is the right matrix of the singular value decomposition (svd) of $\tilde{J}_{\text{re}}$. This estimator is not consistent because the covariance of $J$ is different from the identity matrix.
+and $V_{\tilde{J}_{\text{re}}}$ is the right matrix of the singular value decomposition (svd) of $\tilde{J}_{\text{re}}$. This estimator is not consistent because the covariance of $\Delta J$ is different from the identity matrix, where $\Delta J$ contains the noisy contributions of $J$.
 
 \subsubsection{Generalized Total Least Squares Estimator (GTLS)}
 \label{sec:GTLS}
 
-It allows to overcome the inconsistency of the TLS estimator by using the covariance matrix of $J$, namely
+It allows to overcome the inconsistency of the TLS estimator by using square of the covariance matrix of $\Delta J$, namely
 \begin{equation}
-    C_J = \mathbb{E} \Big\{ \Delta J^H \Delta J \Big\},
+    C_J^{1/2} = \sqrt{\mathbb{E} \Big\{ \Delta J^H \Delta J \Big\}},
 \end{equation}
-where $\Delta J$ contains the noisy contributions of $J$. The cost function is
+as weight for $J$. The cost function to minimize is
 \begin{equation}
     V_{\text{GTLS}} = ||J \theta_{\text{GTLS}}||_2^2,
 \end{equation}
@@ -285,18 +295,37 @@ under the constraint that
 \begin{equation}
     ||C_J^{1/2} \theta_{\text{GTLS}}||_2^2 = 1.
 \end{equation}
-With $X_{\text{re}}$ the right matrix of the generalized svd (gsvd) of $\tilde{J}_{\text{re}}$ and $C_{\tilde{J}_{\text{re}}}^{1/2}$,
+
+A small parenthesis about the construction of $C_J$ is here made. Because $\Delta J$ is only due to noise, it can be expressed as
 \begin{equation}
-    \theta_{\text{GTLS}} = S (X_{\text{re}}^T)_{[:,i]}^{-1} \frac{1}{D_{\text{re}}(i, i)}.
+    \Delta J = \begin{bmatrix}
+        \vdots & & \vdots & \\
+        N_{G_{\text{BLA}}}(k) & \cdots & s_k^{n_a}N_{G_{\text{BLA}}}(k) & 0\\
+        \vdots & & \vdots &
+    \end{bmatrix}.
+\end{equation}
+Its covariance is therefore 
+\begin{equation}
+    C_J(i, j) = \begin{cases}
+        \sum_k s_k^{i+j-2} \hat{\sigma}_\text{tot}^2(k) \quad & \text{if } i, j \leq n_a+1\\
+        0 & \text{otherwise}
+    \end{cases}.
+\end{equation}
+
+
+With $X_{\text{re}}$ the right matrix of the generalized svd (gsvd)\footnote{$J = U_J C_J X_J^T$, $C_j^{1/2} = V_J S_J X_J^T$} of $\tilde{J}_{\text{re}}$ and $C_{\tilde{J}_{\text{re}}}^{1/2}$,
+\begin{equation}
+    \theta_{\text{GTLS}} = S (X_{\tilde{J}_{\text{re}}}^T)_{[:,i]}^{-1} \frac{1}{S_{\tilde{J}_{\text{re}}}(i, i)}.
+    \label{eq:GTLS_solution}
 \end{equation} 
-To determine $i$, the middle matrices $C_{\text{re}}$ and $D_{\text{re}}$ of the gsvd are used:
+To determine $i$, the middle matrices $C_{\tilde{J}_{\text{re}}}$ and $S_{\tilde{J}_{\text{re}}}$ of the gsvd are used:
 \begin{equation}
-    i = \arg \min_i \frac{C_{\text{re}}(i, i)}{D_{\text{re}}(i, i)}
+    i = \arg \min_i \frac{C_{\tilde{J}_{\text{re}}}(i, i)}{S_{\tilde{J}_{\text{re}}}(i, i)}
 \end{equation}
 
 \subsubsection{Bootstrapped Total Least Squares Estimator (BTLS)}
 
-All the previous estimators tend to overemphasize high frequency errors as the regressors ($H$ or $J$) become large at higher frequencies. The BTLS estimator puts a weight inversely proportional to the standard deviation of the error at each frequency.
+All the previous estimators tend to overemphasize high frequency errors as the regressors become large at higher frequencies. The BTLS estimator weights it with the inverse of the standard deviation of the error, to a power $r$ chosen in $[0; 1]$.
 
 In practice, it is the same as a GTLS estimator where
 \begin{equation}
@@ -306,7 +335,7 @@ with
 \begin{equation}
     W = \text{diag}\Big(\sigma_e^{-2r}\Big).
 \end{equation}
-The parameter $r$ is chosen in $[0; 1]$ where a value close to $0$ corresponds to the GTLS estimator. It is then applied iteratively until the new cost is greater or equal to the previous one.
+Equation~(\ref{eq:GTLS_solution}) is then applied iteratively until the new cost is greater or equal to the previous one. It must be specified that the variance of the error is computed based on the previous parameters. 
 
 \subsubsection{Maximum Likelyhood Estimator (ML)}
 \label{sec:ML}
@@ -316,7 +345,7 @@ This estimator maximizes the probability that the parameters $\theta_{\text{ML}}
     V_{\text{ML}} = \frac{1}{2} \sum_k \frac{|E(k)|^2}{\sigma_e^2(k)}
     \label{eq:ML_cost}
 \end{equation}
-and the parameter update $\Delta \theta$ is given by
+and the parameter update $\Delta \theta$ with the \textit{Newton-Gauss} algorithm is given by
 \begin{equation}
     \Delta \theta = -J_{\text{re}}^\dagger \epsilon_{\text{re}},
     \label{eq:ML_update}
@@ -326,6 +355,8 @@ where $J$ is the jacobian of $\epsilon$, which is itself defined as
     \epsilon = \frac{e}{\sigma_e}.
 \end{equation}
 
+No scaling is applied because it does not help the conditioning. It has been tried with rms and 2-norm normalization but none of them helped. A deeper analysis revealed that the blocks of zeros in~(\ref{eq:ML_derivatives}) leads to rank deficiencies of the jacobian, which triggers warnings during Matlab computations.
+
 The main difficulty in the implementation of the ML estimator is in the computation of the jacobian $J$. It needs $A_k$ and $B_k$ such that
 \begin{equation}
     \begin{aligned}
@@ -334,9 +365,9 @@ The main difficulty in the implementation of the ML estimator is in the computat
     \end{aligned}
 \end{equation}
 
-From the model~(\ref{eq:TF_general_form}), these are given by
+From the model~(\ref{eq:TF_parametric_model}), these are given by
 \begin{equation}
-    A_k = \sum_i a_i (j\omega_k)^i \quad \text{and} \quad B_k = \sum_i b_i (j\omega_k)^i.
+    A_k = \sum_i a_i (s_k)^i \quad \text{and} \quad B_k = \sum_i b_i (s_k)^i.
 \end{equation}
 
 The gradient of $A_k$ and $B_k$ with regards to $\theta$ is also needed and there is therefore a need to define $\theta$ as
@@ -348,22 +379,21 @@ The gradient of $A_k$ and $B_k$ with regards to $\theta$ is also needed and ther
 In the following, it will often be written as $\theta = [\theta_a \quad \theta_b]^T$ to ease the notation but $\theta_a$ and $\theta_b$ still contains multiple elements.
 
 The derivatives with respect to $\theta$ is computed by deriving it with respect to $\theta_a$ and $\theta_b$ separately but they are concatenated back afterwards.
-\begin{equation}
+\begin{gather}
     \frac{\partial A_k}{\partial \theta_a} = \begin{bmatrix}
-        1 & j\omega_k & \cdots & (j\omega_k)^{n_a}
+        1 & s_k & \cdots & s_k^{n_a}
     \end{bmatrix}^T, \quad
-    \frac{\partial A_k}{\partial \theta_b} = 0_{(n_b+1) \times 1}
-\end{equation}
-\begin{equation}
+    \frac{\partial A_k}{\partial \theta_b} = 0_{(n_b+1) \times 1}\notag\\
     \frac{\partial B_k}{\partial \theta_a} = 0_{(n_a+1) \times 1}, \quad
     \frac{\partial B_k}{\partial \theta_b} = \begin{bmatrix}
-        1 & j\omega_k & \cdots & (j\omega_k)^{n_b}
+        1 & s_k & \cdots & s_k^{n_b}
     \end{bmatrix}^T
-\end{equation}
+    \label{eq:ML_derivatives}
+\end{gather}
 
-The rest of the computation of the jacobian simply follows what has been explained in the lectures so it is not explained again here.
+The rest of the computation of the jacobian simply follows what has been explained in the lectures so it is not detailed in this report.
 
-The ML estimator is limited to applying the Newton-Gauss method and does not implement the Levenberg-Marquardt algorithm as the norm of the parameter change per iteration was low, as shown on Fig.~\ref{fig:delta_theta_norm}. This gives the intuition that the result of Newton-Gauss is already close to the optimal parameters.
+The norm of the parameter change per iteration $\Delta\theta$ for is shown on Fig.~\ref{fig:delta_theta_norm}. Its low value gives the intuition that the result of Newton-Gauss is already close to the optimal parameters. The Levenberg-Marquardt algorithm is then applied but will be discussed in Sec.~\ref{sec:OML}, following the chronological order of the implementation and the reasons that pushed towards its implementation.
 
 \begin{figure}
     \centering
@@ -383,7 +413,7 @@ The ML estimator is limited to applying the Newton-Gauss method and does not imp
 \section{Model Order Selection}
 \label{sec:AIC}
 
-The estimators described in Sec.~\ref{sec:parametric_model} require a model order $(n_a, n_b)$ to determine the right parameters $\theta = [a_0, \cdots, b_{n_b}]$ of~(\ref{eq:TF_general_form}).
+The estimators described in Sec.~\ref{sec:parametric_model} require a model order $(n_a, n_b)$ to determine the right parameters $\theta = [a_0, \cdots, b_{n_b}]$ of~(\ref{eq:TF_parametric_model}).
 
 The AIC criterion is therefore used. It depends on the cost of the estimator $V_{\text{est}}$ and the order of the model, giving an \textit{AIC cost}, given by
 \begin{equation}
@@ -394,14 +424,26 @@ This is computed for various values of $n_a$ and $n_b$ and the optimal order is 
 
 The values of the order are restricted to transfer functions with more poles than zeros ($\Rightarrow n_a \geqslant n_b$) to have a stable system.
 
+
+
+
+
+
+
+
+
+
+
+
+
 \section{Results}
 
-The AIC criterion described in Sec.~\ref{sec:AIC} has been applied\footnote{for $n_a$ and $n_b$ going up to $15$.} to every estimator of Sec.~\ref{sec:parametric_model} and it gives for each of them a 3D plot like the one shown in Fig.~\ref{fig:AIC_3D}.
+The AIC criterion described in Sec.~\ref{sec:AIC} has been applied to every estimator of Sec.~\ref{sec:parametric_model} and it gives for each of them a 3D plot like the one shown in Fig.~\ref{fig:AIC_3D}.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/AIC_TLS.png}
-    \caption{AIC cost depending on the order of the transfer function for the TLS estimator. The optimal order is circled in red.}
+    \caption{AIC cost depending on the order of the transfer function for the TLS estimator. The optimal order is circled in red. $n_a$ and $n_b$ are going up to $15$.}
     \label{fig:AIC_3D}
 \end{figure}
 
@@ -416,79 +458,96 @@ The resulting FRFs are plotted in Fig.~\ref{fig:estimated_FRF}. It can be seen t
 
 Fig.~\ref{fig:optimal_order} shows the optimal order that minimizes the AIC cost~(\ref{eq:AIC_cost}). A few observations can be made:
 \begin{itemize}
-    \item The LLS and TLS estimators both have a high number of parameters and lay close to the limit $n_a = n_b$. Fig.~\ref{fig:rlocus1} confirms the hypothesis of imperfect pole-zero cancellations emitted based on the bumps of the FRF.
-    \item GTLS and BTLS have a more intermediate number of parameters.
-    \item The ML estimator uses a really low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}, which was expected as it is mathematically the best estimator.
+    \item The LLS and TLS estimators both lay close to the limit $n_a = n_b$. Fig.~\ref{fig:rlocus1} confirms the hypothesis of imperfect pole-zero cancellations emitted based on the bumps of the FRF.
+    \item GTLS and BTLS have a more intermediate number of parameters with fewer zeros.
+    \item The ML estimator uses a low number of poles and zeros, yet achieve a performance similar to the GTLS on Fig.~\ref{fig:estimated_FRF}, which was expected as it is mathematically the best.
 \end{itemize}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/optimalOrder.png}
-    \caption{Optimal orders for each estimator, according to the AIC criterion. The red dashed line is the stability limit $n_a = n_b$.}
+    \caption{Optimal orders for each estimator, according to the AIC criterion. The red dashed line is the stability limit $n_a = n_b$. $n_a$ and $n_b$ are going up to $15$.}
     \label{fig:optimal_order}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/rlocus1.png}
-    \caption{Poles and zeros of the LLS and TLS estimators. Only the ones close to the origin are shown to visualize the near pole-zero cancellation.}
+    \caption{Poles and zeros of the LLS and TLS estimators. Only the ones close to the origin are shown to visualize the close to perfect pole-zero cancellation.}
     \label{fig:rlocus1}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.48\textwidth]{Pictures/rlocus2.png}
-    \caption{Poles and zeros of the GTLS, BTLS and ML estimators.}
-    \label{fig:rlocus2}
-\end{figure}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.48\textwidth]{Pictures/rlocus2.png}
+%     \caption{Poles and zeros of the GTLS, BTLS and ML estimators.}
+%     \label{fig:rlocus2}
+% \end{figure}
 
-Finally, the poles and zeros of the GTLS, BTLS and ML estimators are shown in Fig.~\ref{fig:rlocus2}. It is here clearly visible that the GTLS estimator has poles in the right half-plane at high frequency, meaning the resulting system is unstable. Every estimator has poles with a positive real part but those of the ML and BTLS estimators are around $20$~rad/s, which is by far \textit{less unstable} than the one above $1000$~rad/s of the GTLS.
+% Finally, the poles and zeros of the GTLS, BTLS and ML estimators are shown in Fig.~\ref{fig:rlocus2}. It is here clearly visible that the GTLS estimator has poles in the right half-plane at high frequency, meaning the resulting system is unstable. Every estimator has poles with a positive real part but those of the ML and BTLS estimators are around $20$~rad/s, which is by far \textit{less unstable} than the one above $1000$~rad/s of the GTLS.
+
+From Fig.~\ref{fig:rlocus1}, it can be seen that some poles are unstable (positioned in the right half-plane) and it is the case for every estimator. This will be resolved in Sec.\ref{sec:polesAnalysis}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \section{Deeper Analysis of the Poles}
+\label{sec:polesAnalysis}
 
 \subsection{Poles position uncertainty}
 
-The covariance of the poles (and zeros) of the ML estimator can be approximated. First, the covariance of the parameters must be computed with
+The covariance of the poles (and zeros) of the ML estimator can be approximated by
 \begin{equation}
-    \text{cov}(\theta_{\text{ML}}) \simeq 2 \Big(J_{\text{re}}^H J_{\text{re}}\Big)^{-1}.
-\end{equation}
-
-The covariance of the poles is then given by
-\begin{equation}
-    \text{cov}(p) = \frac{dp}{d\theta_{\text{ML}}} \text{cov}(\theta_{\text{ML}}) \frac{dp^H}{d\theta_{\text{ML}}},
+    \text{cov}(p) \simeq \frac{dp}{d\theta_{\text{ML}}} \Big(2 J_{\text{re}}^H J_{\text{re}}\Big)^{-1} \frac{dp^H}{d\theta_{\text{ML}}},
 \end{equation}
 where $\frac{dp}{d\theta_{\text{ML}}}$ is based on how the parameters $[a_0, \cdots, a_{n_a}]$ relate to the poles $[p_0, \cdots, p_{n_a}]$.
 
 The resulting standard deviation on the real part of the two poles in the right half-plane was really low as shown in Table~\ref{tab:pole_stddev}, meaning the estimator evaluates those close to their optimal positions. 
 
-\begin{table}[h!]
+\begin{table}
     \centering
-    \caption{Standard Deviation of Identified Poles, in rad/s}
-    \begin{tabular}{|c|c|}
+    \caption{Standard Deviation of Poles Estimated by ML, in rad/s}
+    \label{tab:pole_stddev}
+    \begin{tabular}{c c}
     \hline
-    \textbf{Real Part} & \textbf{Imaginary Part} \\
+    \textbf{Pole location} & \textbf{Std. deviation} \\
     \hline
-    $14.578 \times 10^3$ & $0$ \\
-    $0.186$ & $0.185$ \\
-    $0.186$ & $0.185$ \\
+    $-49\,334.5856$ 
+    & $14\,578.5686$ \\
+
+    $22.2394 + j\,445.3317$ 
+    & $0.1866 + j\,0.1845$ \\
+
+    $22.2394 - j\,445.3317$ 
+    & $0.1866 + j\,0.1845$ \\
     \hline
     \end{tabular}
-    \label{tab:pole_stddev}
 \end{table}
 
-For reference, the third pole of the ML estimator, which is visible on the extreme left of Fig.~\ref{fig:rlocus2} has a standard deviation of $\approx 14500$~rad/s. An expected result is the uncertainty on the imaginary port of this pole. Because it is alone, it lays on the real axis and the computed variance is exactly zero. These two clues combined implies that there is definitely a pole on the real axis, but it's exact frequency cannot be extracted from the measured data.
+% For reference, the first pole of the ML estimator has a standard deviation of $\approx 14500$~rad/s. An expected result is the uncertainty on the imaginary part of this pole. Because it is alone, it lays on the real axis and the computed variance is exactly zero. These two clues combined implies that there is definitely a pole on the real axis, but it's exact frequency cannot be extracted from the measured data.
 
-\subsection{Stable ML Estimator}
-\label{sec:Stable_estimator}
+\subsection{Stable ML Estimator (SML)}
+\label{sec:SML}
 
-To obtain a parametric FRF estimate with a stable model, the model~(\ref{eq:TF_general_form}) is replaced by:
+To obtain a parametric FRF estimate where the poles are stable, the model~(\ref{eq:TF_parametric_model}) is changed so the relation between parameters and poles becomes explicit:
 \begin{equation}
-    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_a} (s-\alpha_k)}.
-    \label{eq:TF_stable_model}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_a} (s-\alpha_k)}, \quad \text{with} \quad \theta = [\theta_\alpha \quad \theta_b]^T
+    \label{eq:TF_SML}
 \end{equation}
-With now $\theta = [\theta_\alpha \quad \theta_b]^T$, the poles are a direct parameter and they can be constrained. Before looking to the way of constraining them, let's see how the use of the new model~(\ref{eq:TF_stable_model}) impacts the ML algorithm briefly described in Sec.~\ref{sec:ML}.
+The constraint on the real part of the poles can be enforced after each parameter update but before looking to the way of constraining them, let's see how the use of the new model~(\ref{eq:TF_SML}) impacts the ML algorithm described in Sec.~\ref{sec:ML}.
 
-$B_k$ and it's derivatives stay unchanged, except that the length of $\theta$ now becomes $n_a+n_b+1$, because explicitly writing the poles removes a parameter\footnote{It is worth noticing that this allows to remove the constraint on $||\theta||_2^2$, without which the the cost function was unconstrained because of the extra degree of freedom ($n_a+n_b+2$ parameters).}. On the other hand, we now have
+$B_k$ and it's derivatives stay unchanged, except that the length of $\theta$ now becomes $n_a+n_b+1$, because explicitly writing the poles removes a parameter\footnote{It is worth noticing that this allows to remove the constraint on $||\theta||_2^2$.}. On the other hand, we now have
 \begin{equation}
     A_k = \prod_{i} (s_k-\alpha_i),
 \end{equation}
@@ -507,33 +566,33 @@ where
     k = \min\Bigg(1, \frac{-\Re\Big\{\alpha_j^ i\Big\}}{\Re\Big\{\alpha_j^{i+1}\Big\} - \Re\Big\{\alpha_j^i\Big\}}\Bigg)
     \label{eq:delta_theta_limit}
 \end{equation}
-for every pole $\alpha_j$ such that $\Re\Big\{\alpha_j^{i+1}\Big\} > 0$. A second approach could have been to limit only the poles that would cross the imaginary axis but this would have been equivalent to not follow the gradient anymore, losing the interest of using a maximum likelihood estimator. The resulting FRF is compared with the one obtained without constraining the poles in Fig.~\ref{fig:FRF_stable_ML}.
+for every pole $\alpha_j$ such that $\Re\Big\{\alpha_j^{i+1}\Big\} > 0$. A second approach could have been to limit only the poles that would cross the imaginary axis but this would have been equivalent to not follow the gradient anymore, losing the interest of using a maximum likelihood estimator. The resulting FRF is compared with the one obtained without constraining the poles in Fig.~\ref{fig:FRF_SML}.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/FRF_stable_ML.png}
-    \caption{Comparison of the estimated FRF of the ML and the stable ML algorithms.}
-    \label{fig:FRF_stable_ML}
+    \caption{Comparison of the estimated FRF of the ML and the SML algorithms.}
+    \label{fig:FRF_SML}
 \end{figure}
 
-This estimator, called \textit{stable ML} is however not useful. If it does impose poles with a negative real value, it cannot be applied while enforcing real parameters as the poles $\alpha_1, \cdots, \alpha_{n_a}$ need to be complex. The resulting parameter vector can therefore not be written again in the general form~(\ref{eq:TF_general_form}) with real values for $a_k$ and $b_k$.
+The SML estimator is however not useful. If it does impose poles with a negative real value, it cannot be applied while enforcing real parameters as the poles $\alpha_1, \cdots, \alpha_{n_a}$ need to be complex. The resulting parameter vector can therefore not be written again in the general form~(\ref{eq:TF_parametric_model}) with real values for $a_k$ and $b_k$.
 
-\subsection{Stable Real ML Estimator}
-\label{sec:stable_real_estimator}
+\subsection{Stable Real ML Estimator (SRML)}
+\label{sec:SRML}
 
-This section starts from what has been done is Sec.~\ref{sec:Stable_estimator} and improves it to end up with real parameters, while maintaining stable poles, hence the name \textit{Stable Real ML} estimator.
+This section starts from what has been done is Sec.~\ref{sec:SML} and improves it to end up with real parameters, while maintaining stable poles, hence the name \textit{Stable Real ML} estimator.
 
 The transfer function takes the form
 \begin{equation}
     G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_{a, \text{re}}} (s-a_k) \prod_{k=1}^{n_{a, \text{cplx}}} (s^2 - 2 s \alpha_k \cos \phi_k + \alpha_k^2)},
-    \label{eq:TF_stable_real_model}
+    \label{eq:TF_SRML}
 \end{equation}
 such that it's poles are given by $a_k$ and $\alpha_k e^{\pm j \phi_k}$. The parameters have now become 
 \begin{equation}
     \theta = \begin{bmatrix}
         a_k & \alpha_k & \phi_k & b_k
     \end{bmatrix}^T.
-    \label{eq:theta_stable_real}
+    \label{eq:theta_SRML}
 \end{equation}
 This new model implies the following changes:
 \begin{gather}
@@ -548,52 +607,44 @@ This new model implies the following changes:
         \cdots & \frac{s_k \alpha_i \sin \phi_i}{(s_k^2 - 2 s_k \alpha_i \cos \phi_i + \alpha_i^2)} & \cdots
     \end{bmatrix}^T.
 \end{gather}
-This model allows complex poles which are complex conjugates, while keeping the parameters real. However, constraining the poles to the left half-plane is still done by limiting $\Delta \theta$ with~(\ref{eq:delta_theta_limit}), which truncates the set of acceptable solutions in an artificial way.
+This model makes sure the complex poles are complex conjugates, while keeping the parameters real. However, constraining the poles to the left half-plane is still done by limiting $\Delta \theta$ with~(\ref{eq:delta_theta_limit}), which truncates the set of acceptable solutions in an artificial way.
 
-Before adding another layer of complexity to cure this, let's rapidly discuss the results of this estimator. The optimal order is way higher than the one computed by the ML estimator. However, there is no big difference between the optimal AIC cost and the one on the flat region at lower orders, as shown on Fig.~\ref{fig:AIC_stable_real_ML}. The hope is that an improved model might be able to reach a lower cost in the region of lower order.
+Before adding a last layer of complexity to cure this, let's rapidly discuss the results of the SML and SRML estimators. The final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs}. The SRML estimate shown on Fig.~\ref{fig:FRF_SRML} is already a better match than Fig.~\ref{fig:FRF_SML}, especially visible in the phase subplot. This is surprising as the set of admissible solutions is reduced by imposing complex conjugate poles and zeros. 
 
-The final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs}. The stable real ML estimate shown on Fig.~\ref{fig:FRF_stable_real_ML} is already a better match than Fig.~\ref{fig:FRF_stable_ML}, which is surprising as the set of admissible solutions is reduced by imposing complex conjugate poles and zeros. 
+The explanation is that the SML and SRML tend to have $\Delta\theta$ with different scales, which makes them converge to different minima, even with the same initial estimate. 
 
 \begin{table}
     \centering
-    \caption{Maximum Likelihood Cost Comparison}
-    \begin{tabular}{|c|c|}
+    \caption{Cost Comparison of the ML Estimators}
+    \begin{tabular}{c c}
     \hline
     \textbf{Estimator} & \textbf{ML Cost} \\
     \hline
     ML & $822$ \\
-    Optimal ML & $25\,345$ \\
-    Stable Real ML & $27\,107$ \\
-    Stable ML & $35\,941$ \\
+    OML & $25\,345$ \\
+    SRML & $27\,107$ \\
+    SML & $35\,941$ \\
     \hline
     \end{tabular}
     \label{tab:ML_costs}
 \end{table}
 
-To explain why it performs better than the stable ML estimator, it could be that the jacobian pushes the poles to the right half-plane, which violates the constraints faster for the latter and stops it at a higher cost.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.48\textwidth]{Pictures/AIC_stable_real_ML.png}
-    \caption{AIC cost of the stable real ML estimator. The optimal order is circled in red.}
-    \label{fig:AIC_stable_real_ML}
-\end{figure}
-
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{Pictures/FRF_stable_real_ML.png}
-    \caption{Comparison of the estimated FRF of the ML and the stable real ML algorithms.}
-    \label{fig:FRF_stable_real_ML}
+    \caption{Comparison of the estimated FRF of the ML and the SRML estimators.}
+    \label{fig:FRF_SRML}
 \end{figure}
 
-\subsection{Optimal ML Estimator}
+\subsection{Optimal ML Estimator (OML)}
+\label{sec:OML}
 
-This estimator is called \textit{optimal ML} as it removes the need for hand crafted constraints. This is done by manipulating~(\ref{eq:TF_stable_real_model}) so its poles can no longer have a positive real part. It results in
+This estimator is called \textit{optimal ML} as it removes the need for hand crafted constraints. This is done by manipulating~(\ref{eq:TF_SRML}) so its poles can no longer have a positive real part. The resulting transfer function is:
 \begin{equation}
-    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_{a, \text{re}}} (s+a_k^2) \prod_{k=1}^{n_{a, \text{cplx}}} (s^2 + 2 s \alpha_k^2 + \alpha_k^4 + \phi_k^2)},
-    \label{eq:TF_optimal_model}
+    G(s) = \frac{\sum_{k=0}^{n_b} b_k s^k}{\prod_{k=1}^{n_{a, \text{re}}} (s+a_k^2) \prod_{k=1}^{n_{a, \text{cplx}}} (s^2 + 2 s \alpha_k^2 + \alpha_k^4 + \phi_k^2)}.
+    \label{eq:TF_OML}
 \end{equation}
-and for the same parameter vector $\theta$ as in~(\ref{eq:theta_stable_real}),
+The resulting poles are in $-a_k^2$ and $-\alpha_k^2 \pm j\phi_k$. For the same parameter vector $\theta$ as in~(\ref{eq:theta_SRML}),
 \begin{gather}
     A_k = \prod_{i} (s_k+a_i^2) \prod_{i} (s_k^2 + 2 s_k \alpha_i^2 + \alpha_i^4 + \phi_i^2),\\
     \frac{\partial A_k}{\partial \theta_a} = 2 A_k \begin{bmatrix}
@@ -607,16 +658,14 @@ and for the same parameter vector $\theta$ as in~(\ref{eq:theta_stable_real}),
     \end{bmatrix}^T.
 \end{gather}
 
-To conclude the presentation of this estimator, it uses as initial parameters the results of the stable real ML estimator of Sec.~\ref{sec:stable_real_estimator}.
+It uses as initial parameters the results of the SRML estimator of Sec.~\ref{sec:SRML}. Even though it was never mentioned in this report, the norm of $\Delta \theta$ at the end of the Newton-Gauss iteration has always been checked and was determined to be low enough so a second loop using the Levenberg-Marquardt (LM) algorithm was never used.
 
-Even though it was never mentioned in this report, the norm of $\Delta \theta$ at the end of the Newton-Gauss iteration has always been checked and was determined to be low enough so a second loop using the Levenberg-Marquardt (LM) algorithm was never used.
-
-This norm was however not negligible with this optimal ML estimator so the LM was implemented and "retro-fitted" to every ML estimator. The most complicated part was the determination of a convergence condition and it was decided to be a minimal threshold on the relative change of the parameters:
+This norm was however not negligible with this OML estimator so the LM was implemented and "retro-fitted" to every ML estimator. The most complicated part was the determination of a convergence condition and it was decided to be a minimal threshold on the relative change of the parameters:
 \begin{equation}
     \frac{||\Delta\theta||}{||\theta||} \leq 10^{-12}
 \end{equation}
 
-The cost improve between the stable real estimator and this one is quite small, as shown in Table~\ref{tab:ML_costs}. Visually, the phase estimate is way worse going from Fig.~\ref{fig:FRF_stable_real_ML} to Fig.~\ref{fig:FRF_optimal_ML} but the overshoot at the oscillation frequency is lower, resulting in a smaller cost.
+The cost improve between the SRML estimator and this one is quite small, as shown in Table~\ref{tab:ML_costs}. Visually, the phase estimate is way worse going from Fig.~\ref{fig:FRF_SRML} to Fig.~\ref{fig:FRF_optimal_ML} but the overshoot at the oscillation frequency is lower, resulting in a slightly lower cost.
 
 \begin{figure}
     \centering
@@ -625,7 +674,9 @@ The cost improve between the stable real estimator and this one is quite small, 
     \label{fig:FRF_optimal_ML}
 \end{figure}
 
-The optimal orders of the ML estimators shown on Fig.~\ref{fig:optimal_order_ML} show that the stable real ML estimate is still a decent choice of model as its ML cost is close to the one of the optimal ML but it needs 2 parameters less.
+\subsection{Conclusion on the Different ML Estimators}
+
+The optimal order of the ML estimators shown on Fig.~\ref{fig:optimal_order_ML} shows that the SRML estimate is still a decent choice of model as its ML cost is close to the one of the OML but it needs 2 parameters less.
 
 \begin{figure}
     \centering
@@ -634,7 +685,7 @@ The optimal orders of the ML estimators shown on Fig.~\ref{fig:optimal_order_ML}
     \label{fig:optimal_order_ML}
 \end{figure}
 
-A final note can be made about the uncertainty on the poles of the SRML and OML estimators. Their expressions link directly the parameters to the poles so their gradients $\partial p / \partial \theta$ are block matrices. They are structurally described here, just to give an insight on how they are built.
+A final note can be made about the uncertainty on the poles of the SRML and OML estimators. Their transfer function models~(\ref{eq:TF_SRML}) and~(\ref{eq:TF_OML}) link directly the parameters to the poles so their gradients $\partial p / \partial \theta$ are block matrices. They are structurally described here, just to give an insight on how they are built.
 \begin{gather}
     \frac{\partial p_{\text{SRML}}}{\partial \begin{bmatrix}
         \theta_a & \theta_\alpha & \theta_\phi
@@ -653,10 +704,11 @@ A final note can be made about the uncertainty on the poles of the SRML and OML 
 \end{gather}
 
 And finally, the resulting standard deviation of the poles are given in Table~\ref{tab:ML_pole_stddev}. It can be observed that the standard deviation of the complex conjugate poles (responsible for the oscillation) of the OML estimator is higher than with SRML. 
+The OML model benefits from this lower uncertainty as it is known to produce the peak observed in the FRF according to standard system theory.
 
-\begin{table}[h!]
+\begin{table}
     \centering
-    \caption{Standard deviation of estimated poles for SRML and OML}
+    \caption{Standard Deviation of Poles Estimated by SRML and OML, in rad/s}
     \label{tab:ML_pole_stddev}
     \begin{tabular}{l c c}
     \hline

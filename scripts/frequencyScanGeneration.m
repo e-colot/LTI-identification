@@ -1,7 +1,7 @@
 function [fs, maxFreq, N1, N2] = frequencyScanGeneration()
 % [fs, maxFreq, N1, N2] = frequencyScanGeneration()
 % generates a full multisine with a high spectral resolution, to lower the
-% SNR. It will be applied at a high sampling frequency to cover up to 1MHz
+% SNR. It will be applied at a high sampling frequency to cover up to 40kHz
 % and make sure to identify all the poles of the FRF (up to this frequency)
 %
 % It contains 2 realizations because of how the PXI device works and it
