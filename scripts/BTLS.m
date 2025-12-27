@@ -1,5 +1,5 @@
-function [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, r)
-% [A, B, cost] = BTLS(G_BLA, G_var, f, Na, Nb, r)
+function [A, B, cost, costHandle] = BTLS(G_BLA, G_var, f, Na, Nb, r)
+% [A, B, cost, costHandle] = BTLS(G_BLA, G_var, f, Na, Nb, r)
 % Determines the parameters A and B using a BTLS estimator. The starting
 % value for theta is computed using a GTLS estimator
 % 
@@ -62,20 +62,15 @@ s = 1j*2*pi*f;
             
             [~, i] = min(diag(CJ)./diag(SJ));
             
-            Xinv = inv(XJ');
+            Xinv = (XJ')\eye(size(XJ, 2));
             newTheta = 1/SJ(i, i) * Xinv(:, i);
             
             % because of the rms normalization
             newTheta = S * newTheta;
 
         %% ------ Cost computation ------
-            A = s.^(0:Na)*newTheta(1:Na+1);
-            B = s.^(0:Nb)*newTheta(Na+2:end);
-
-            e = A.*G_BLA - B;
-            var_e = abs(A).^2 .* G_var;
-
-            newCost = sum(abs(e).^2 ./ (var_e.^r));
+            err = W*J0*newTheta;
+            newCost = sum(abs(err).^2);  
 
         if (newCost < oldCost)
             oldTheta = newTheta;
@@ -89,6 +84,30 @@ s = 1j*2*pi*f;
 
     A = flipud(oldTheta(1:Na+1));
     B = flipud(oldTheta(Na+2:end));
-    cost = oldCost;
+
+%% Cost computation    
+    
+    Amatrix = s.^(0:Na)*oldTheta(1:Na+1);
+    var_e = abs(Amatrix).^2 .* G_var;
+    W = diag(var_e.^(-r));
+
+    err = W*J0*oldTheta;
+    cost = sum(abs(err).^2);  
+
+    costHandle = @(G_BLA, G_var, f) costComputation(G_BLA, G_var, f);
+
+    function cost = costComputation(G_BLA, G_var, f)
+        s = 1j*2*pi*f;
+        J0 = repmat(1j*2*pi*f, 1, Na+Nb+2);
+        J0 = J0.^([(0:Na) (0:Nb)]);
+        J0 = J0.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
+            
+        Amatrix = s.^(0:Na)*oldTheta(1:Na+1);
+        var_e = abs(Amatrix).^2 .* G_var;
+        W = diag(var_e.^(-r));
+
+        err = W*J0*oldTheta;
+        cost = sum(abs(err).^2);    
+    end
 
 end

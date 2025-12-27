@@ -13,38 +13,42 @@ colors = get(gca, 'colororder');
     f = f(valid);
     G_BLA = G_BLA(valid);
     total_var = total_var(valid);
+  
+  close all; % clean figures
 
     Ne = length(G_BLA);
-    NaList = 1:15;
-    NbList = 1:15;
+    NaList = 1:50;
+    NbList = 1:50;
 
-%% Initial estimate using LLS
+%% LLS (optimal order = [36, 34])
 
-    LLSest = @(Na, Nb) LLS(G_BLA, f, Na, Nb);
-    [Na_optLLS, Nb_optLLS, A_optLLS, B_optLLS] = AIC(LLSest, NaList, NbList, Ne);
+    LLSest = @(G_BLA, total_var, f, Na, Nb) LLS(G_BLA, f, Na, Nb);
+    [Na_optLLS, Nb_optLLS, A_optLLS, B_optLLS] = orderSelection(LLSest, NaList, NbList, G_BLA, total_var, f);
         % [Alls, Blls, ~] = LLS(G_BLA, f, n_a, n_b);
 
-%% Initial estimate using TLS
+%% TLS (optimal order = [4 2])
 
-    TLSest = @(Na, Nb) TLS(G_BLA, f, Na, Nb);
-    [Na_optTLS, Nb_optTLS, A_optTLS, B_optTLS] = AIC(TLSest, NaList, NbList, Ne);
+    TLSest = @(G_BLA, total_var, f, Na, Nb) TLS(G_BLA, f, Na, Nb);
+    [Na_optTLS, Nb_optTLS, A_optTLS, B_optTLS] = orderSelection(TLSest, NaList, NbList, G_BLA, total_var, f);
         % [Atls, Btls, ~] = TLS(G_BLA, f, n_a, n_b);
 
-%% Initial estimate using GTLS
-    
-    GTLSest = @(Na, Nb) GTLS(G_BLA, total_var, f, Na, Nb);
-    [Na_optGTLS, Nb_optGTLS, A_optGTLS, B_optGTLS] = AIC(GTLSest, NaList, NbList, Ne);
+%% GTLS (optimal order = [28 27])
+    NaList = 1:30;
+    NbList = 1:30;
+
+    GTLSest = @(G_BLA, total_var, f, Na, Nb) GTLS(G_BLA, total_var, f, Na, Nb);
+    [Na_optGTLS, Nb_optGTLS, A_optGTLS, B_optGTLS] = orderSelection(GTLSest, NaList, NbList, G_BLA, total_var, f);
         % [Agtls, Bgtls, ~] = GTLS(G_BLA, total_var, f, n_a, n_b);
 
-%% Iterative estimate using BTLS
-    r = 1;
-    BTLSest = @(Na, Nb) BTLS(G_BLA, total_var, f, Na, Nb, r);
-    [Na_optBTLS, Nb_optBTLS, A_optBTLS, B_optBTLS] = AIC(BTLSest, NaList, NbList, Ne);
+%% BTLS
+    r = 0.5;
+    BTLSest = @(G_BLA, total_var, f, Na, Nb) BTLS(G_BLA, total_var, f, Na, Nb, r);
+    [Na_optBTLS, Nb_optBTLS, A_optBTLS, B_optBTLS] = orderSelection(BTLSest, NaList, NbList, G_BLA, total_var, f);
 
 %% ML
 
-    MLest = @(Na, Nb) ML(G_BLA, total_var, f, Na, Nb);
-    [Na_optML, Nb_optML, A_optML, B_optML] = AIC(MLest, NaList, NbList, Ne);
+    MLest = @(G_BLA, total_var, f, Na, Nb) ML(G_BLA, total_var, f, Na, Nb);
+    [Na_optML, Nb_optML, A_optML, B_optML] = orderSelection(MLest, NaList, NbList, G_BLA, total_var, f);
 
 %% saving data
 
@@ -80,7 +84,6 @@ save("../results/parametricWorkspace.mat");
         grid on;
 
 %% model orders on a plot
-Na_optLLS = 35; Nb_optLLS = 32; % computed with large Na_max and Nb_max, hardcoded for speed
     figure;
     hold on;
     plot(Na_optLLS, Nb_optLLS, 'o', Color=colors(2, :), MarkerSize=8, DisplayName='LLS', LineWidth=2);

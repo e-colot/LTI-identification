@@ -1,5 +1,5 @@
-function [A, B, cost] = LLS(G_BLA, f, Na, Nb)
-% [A, B, cost] = LLS(G_BLA, f, Na, Nb)
+function [A, B, cost, costHandle] = LLS(G_BLA, f, Na, Nb)
+% [A, B, cost, costHandle] = LLS(G_BLA, f, Na, Nb)
 % Determines the parameters A and B using a LLS estimator (with a_0 = 1).
 % 
 % Na and Nb are the order of the denominator and numerator of the
@@ -39,5 +39,17 @@ function [A, B, cost] = LLS(G_BLA, f, Na, Nb)
 %% Cost computation
 
     cost = sum(abs(H0 * theta_LLS - y).^2);
+
+    costHandle = @(G_BLA, useless, f) costComputation(G_BLA, useless, f);
+
+    function cost = costComputation(G_BLA, ~, f)
+        H0 = repmat(1j*2*pi*f, 1, Na+Nb+1);
+        H0 = H0.^([(1:Na) (0:Nb)]);
+        H0 = H0.*[repmat(-G_BLA, 1, Na), -1*ones(size(G_BLA, 1), Nb+1)];
+        H0 = [real(H0)  ;
+             imag(H0) ];
+        y = [real(G_BLA); imag(G_BLA)];
+        cost = sum(abs(H0 * theta_LLS - y).^2);
+    end
 
 end

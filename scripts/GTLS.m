@@ -1,5 +1,5 @@
-function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
-% [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
+function [A, B, cost, costHandle] = GTLS(G_BLA, G_var, f, Na, Nb)
+% [A, B, cost, costHandle] = GTLS(G_BLA, G_var, f, Na, Nb)
 % Determines the parameters A and B using a GTLS estimator.
 % 
 % Na and Nb are the order of the denominator and numerator of the
@@ -9,23 +9,23 @@ function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
 
 %% ------------ Building J ---------------------
 
-    % J = [Y sY ... U sU ...]
+    % J0 = [Y sY ... U sU ...]
     % taking U = 1 and Y = G_BLA
     
-      % placing s in the matrix J
-        J = repmat(1j*2*pi*f, 1, Na+Nb+2);
-        J = J.^([(0:Na) (0:Nb)]);
+      % placing s in the matrix J0
+        J0 = repmat(1j*2*pi*f, 1, Na+Nb+2);
+        J0 = J0.^([(0:Na) (0:Nb)]);
       % placing G_BLA in the matrix
-        J = J.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
+        J0 = J0.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
     
-      % To force real parameters, the real and imaginary part of J must be
+      % To force real parameters, the real and imaginary part of J0 must be
       % split
-        J = [real(J)  ;
-             imag(J) ];
+        J0 = [real(J0)  ;
+             imag(J0) ];
     
-      % for conditioning, rms normalization of J (column-wise)
-        S = diag(1./rms(J));
-        J = J * S;
+      % for conditioning, rms normalization of J0 (column-wise)
+        S = diag(1./rms(J0));
+        J = J0 * S;
 
 %% ------------ Building C_J^0.5 ---------------------
 
@@ -50,7 +50,7 @@ function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
         
         [~, i] = min(diag(CJ)./diag(SJ));
         
-        Xinv = inv(XJ');
+        Xinv = (XJ')\eye(size(XJ, 2));
         theta_GTLS = 1/SJ(i, i) * Xinv(:, i);
         
         % because of the rms normalization
@@ -61,7 +61,19 @@ function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
 
 %% Cost computation
 
-    err = J*theta_GTLS;
-    cost = sum(abs(err).^2);
+    err = J0*theta_GTLS;
+    cost = sum(abs(err).^2);  
+
+
+    costHandle = @(G_BLA, G_var, f) costComputation(G_BLA, G_var, f);
+
+    function cost = costComputation(G_BLA, ~, f)
+        J0 = repmat(1j*2*pi*f, 1, Na+Nb+2);
+        J0 = J0.^([(0:Na) (0:Nb)]);
+        J0 = J0.*[repmat(G_BLA, 1, Na+1), -ones(size(G_BLA, 1), Nb+1)];
+
+        err = J0*theta_GTLS;
+        cost = sum(abs(err).^2);     
+    end
 
 end

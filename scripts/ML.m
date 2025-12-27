@@ -1,4 +1,4 @@
-function [A, B, cost, p_var] = ML(G_BLA, G_var, f, Na, Nb, show)
+function [A, B, cost, costHandle, p_var] = ML(G_BLA, G_var, f, Na, Nb, show)
 % [A, B, cost, p_var] = ML(G_BLA, G_var, f, Na, Nb, [show])
 % Determines the parameters A and B using a ML estimator. The starting
 % value for theta is computed using a GTLS estimator
@@ -38,14 +38,7 @@ function [A, B, cost, p_var] = ML(G_BLA, G_var, f, Na, Nb, show)
             J_re = [real(jacob); imag(jacob)];
             eps_re = [real(epsilon); imag(epsilon)];
 
-        % for conditioning, rms normalization of J (column-wise)
-            
-            % S = diag(1./sum(J_re.^2, 1));
-            % J_re = J_re * S;
-
         deltaTheta = -J_re\eps_re;
-
-        % deltaTheta = S * deltaTheta;
 
         thetaChange(itrCnt) = norm(deltaTheta);
 
@@ -124,7 +117,19 @@ function [A, B, cost, p_var] = ML(G_BLA, G_var, f, Na, Nb, show)
 
     A = flipud(oldTheta(1:Na+1));
     B = flipud(oldTheta(Na+2:end));
-    cost = oldCost;
+
+%% Cost computation
+
+    epsilon = constrEps(G_BLA, G_var, s, oldTheta, Na, Nb);
+    cost = epsilon' * epsilon; 
+
+    costHandle = @(G_BLA, G_var, f) costComputation(G_BLA, G_var, f);
+
+    function cost = costComputation(G_BLA, G_var, f)
+        s = 2*pi*f;
+        epsilon = constrEps(G_BLA, G_var, s, oldTheta, Na, Nb);
+        cost = epsilon' * epsilon;   
+    end
 
 %% Poles uncertainty computation
     thetaCov = inv(2*(J_re'*J_re));
