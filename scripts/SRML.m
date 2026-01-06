@@ -174,7 +174,7 @@ function [A, B, cost, p_var] = SRML(G_BLA, G_var, f, Na, Nb, show)
           % taking the rank deficiency of J into account
           S(size(S, 2), size(S, 2)) = 0;
 
-        deltaTheta = -V * ((S'*S + lambda^2 * eye(size(S, 2)))\S') * U' * eps_re;
+        deltaTheta = -V * ((S'*S + lambda^2 * eye(size(S, 2)))\S.') * U.' * eps_re;
 
         % stop if relative parameter change gets low
         if (norm(deltaTheta)/(1+norm([oldA; oldAlpha; oldPhi; oldB]))) < 1e-12

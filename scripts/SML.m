@@ -113,7 +113,7 @@ end
 
 function eps = constrEps(G_BLA, G_var, s, oldA, oldB, Nb)
         % A:
-            A = prod(s - oldA', 2);
+            A = prod(s - oldA.', 2);
         % B:
             B = s.^(0:Nb)*oldB;
         % e:

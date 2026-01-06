@@ -1,4 +1,4 @@
-clear; close all; clc;
+clear; %close all; clc;
 
 fs = 5e3;
 
@@ -17,10 +17,10 @@ fs = 5e3;
     [A_ML, ~, ~, p_var_ML] = ML(G_BLA, total_var, f, 3, 3);
 
 %% stable real ML uncertainty estimate
-    [A_SRML, ~, ~, p_var_SRML] = SRML(G_BLA, total_var, f, 2, 1);
+    [A_SRML, ~, ~, p_var_SRML] = SRML(G_BLA, total_var, f, 6, 5);
 
 %% optimal ML uncertainty estimate
-    [A_OML, ~, ~, p_var_OML] = OML(G_BLA, total_var, f, 3, 3);
+    [A_OML, ~, ~, p_var_OML] = OML(G_BLA, total_var, f, 6, 5);
 
 %% Disps
 

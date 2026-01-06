@@ -55,14 +55,14 @@ s = 1j*2*pi*f;
                     
             % To compute C_J^0.5, it must be diagonalized
             [eigenVect, eigenVal] = eig(C_J_re);
-            sqrt_C_J_re = eigenVect * sqrt(eigenVal) * eigenVect';
+            sqrt_C_J_re = eigenVect * sqrt(eigenVal) * eigenVect.';
 
         %% ------ Computation of theta ------
             [~,~,XJ,CJ,SJ] = gsvd(J_re, sqrt_C_J_re);
             
             [~, i] = min(diag(CJ)./diag(SJ));
             
-            Xinv = inv(XJ');
+            Xinv = inv(XJ.');
             newTheta = 1/SJ(i, i) * Xinv(:, i);
             
             % because of the rms normalization

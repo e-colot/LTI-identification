@@ -71,12 +71,12 @@ function [f, G_ML, total_var] = robustMethod(dataFile, fs, showPlot)
     end
 
     % average nonlinear distortions out
-    G_ML = squeeze(mean(G_1D, 1))';
-    noise_var = mean(noiseVar_2D, 1)' / realizations;
-    distortion_var = var(G_1D, 0, 1)' / realizations;
+    G_ML = squeeze(mean(G_1D, 1)).';
+    noise_var = mean(noiseVar_2D, 1).' / realizations;
+    distortion_var = var(G_1D, 0, 1).' / realizations;
 
     total_var = noise_var + distortion_var;
-    f = (0:periodN-1)'*(fs/periodN);
+    f = (0:periodN-1).'*(fs/periodN);
 
     %% Plots
     

@@ -42,7 +42,7 @@ function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
     
         % To compute C_J^0.5, it must be diagonalized
         [eigenVect, eigenVal] = eig(C_J);
-        sqrtC_J = eigenVect * sqrt(eigenVal) * eigenVect';
+        sqrtC_J = eigenVect * sqrt(eigenVal) * eigenVect.';
 
 %% ------------- Computation of theta -------------
 
@@ -50,7 +50,7 @@ function [A, B, cost] = GTLS(G_BLA, G_var, f, Na, Nb)
         
         [~, i] = min(diag(CJ)./diag(SJ));
         
-        Xinv = inv(XJ');
+        Xinv = inv(XJ.');
         theta_GTLS = 1/SJ(i, i) * Xinv(:, i);
         
         % because of the rms normalization

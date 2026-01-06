@@ -18,8 +18,8 @@ colors = [colors;
     total_var = total_var(valid);
 
     Ne = length(G_BLA);
-    NaList = 1:8;
-    NbList = 1:8;
+    NaList = 1:15;
+    NbList = 1:15;
 
 %% Run AIC on ML
 
@@ -59,7 +59,7 @@ colors = [colors;
     G_ML = B_ML_eval./A_ML_eval;
 
     % Stable ML
-    A_SML_eval = prod(s + A_SML', 2);
+    A_SML_eval = prod(s + A_SML.', 2);
     B_SML_eval = polyval(B_SML, s);
     G_SML = B_SML_eval./A_SML_eval;
 
@@ -81,7 +81,7 @@ colors = [colors;
     plot(f, db(G_ML), '--', 'Color', colors(6,:), 'LineWidth', 1.5);
     legend('SML', 'ML');
     xlabel('Frequency [Hz]');
-    ylabel('FRF Magnitude [dB]');
+    ylabel('|G_{est}| [dB]');
     xlim([f(1) f(end)]);
     grid on;
 
@@ -91,7 +91,7 @@ colors = [colors;
     plot(f, unwrap(angle(G_ML)), '--', 'Color', colors(6,:), 'LineWidth', 1.5);
     %legend('Stable ML', 'ML');
     xlabel('Frequency [Hz]');
-    ylabel('FRF Phase [rad]');
+    ylabel('\angle G_{est}');
     xlim([f(1) f(end)]);
     grid on;
 
@@ -103,7 +103,7 @@ colors = [colors;
     plot(f, db(G_ML), '--', 'Color', colors(6,:), 'LineWidth', 1.5);
     legend('SRML', 'ML');
     xlabel('Frequency [Hz]');
-    ylabel('FRF Magnitude [dB]');
+    ylabel('|G_{est}| [dB]');
     xlim([f(1) f(end)]);
     grid on;
 
@@ -113,7 +113,7 @@ colors = [colors;
     plot(f, unwrap(angle(G_ML)), '--', 'Color', colors(6,:), 'LineWidth', 1.5);
     %legend('Stable Real ML', 'ML');
     xlabel('Frequency [Hz]');
-    ylabel('FRF Phase [rad]');
+    ylabel('\angle G_{est}');
     xlim([f(1) f(end)]);
     grid on;
 
@@ -125,7 +125,7 @@ colors = [colors;
     plot(f, db(G_ML), '--', 'Color', colors(6,:), 'LineWidth', 1.5);
     legend('OML', 'ML');
     xlabel('Frequency [Hz]');
-    ylabel('FRF Magnitude [dB]');
+    ylabel('|G_{est}| [dB]');
     xlim([f(1) f(end)]);
     grid on;
 
@@ -135,7 +135,7 @@ colors = [colors;
     plot(f, unwrap(angle(G_ML)), '--', 'Color', colors(6,:), 'LineWidth', 1.5);
     %legend('Optimal ML', 'ML');
     xlabel('Frequency [Hz]');
-    ylabel('FRF Phase [rad]');
+    ylabel('\angle G_{est}');
     xlim([f(1) f(end)]);
     grid on;
 
@@ -183,8 +183,8 @@ colors = [colors;
     ylabel('Optimal Model Order n_b');
     legend('Location', 'best');
     grid on;
-    xlim([0 6]);
-    ylim([0 6]);
+    xlim([0 7]);
+    ylim([0 7]);
 
     %% costs
     disp(['ML cost: ', num2str(costML)]);

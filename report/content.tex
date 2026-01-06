@@ -513,7 +513,7 @@ The covariance of the poles (and zeros) of the ML estimator can be approximated 
 \end{equation}
 where $\frac{dp}{d\theta_{\text{ML}}}$ is based on how the parameters $[a_0, \cdots, a_{n_a}]$ relate to the poles $[p_0, \cdots, p_{n_a}]$.
 
-The resulting standard deviation on the real part of the two poles in the right half-plane was really low as shown in Table~\ref{tab:pole_stddev}, meaning the estimator evaluates those close to their optimal positions. 
+The resulting standard deviation on the unstable pole (the one in the right half-plane) is large as shown in Table~\ref{tab:pole_stddev}. The pole is however far from the origin, which means it is unlikely to move to the left half-plane.
 
 \begin{table}
     \centering
@@ -523,14 +523,14 @@ The resulting standard deviation on the real part of the two poles in the right 
     \hline
     \textbf{Pole location} & \textbf{Std. deviation} \\
     \hline
-    $-49\,334.5856$ 
-    & $14\,578.5686$ \\
+    $49\,334.50$ 
+    & $14\,578.58$ \\
 
-    $22.2394 + j\,445.3317$ 
-    & $0.1866 + j\,0.1845$ \\
+    $-22.23 + j\,445.33$ 
+    & $0.18 + j\,0.18$ \\
 
-    $22.2394 - j\,445.3317$ 
-    & $0.1866 + j\,0.1845$ \\
+    $-22.23 - j\,445.33$ 
+    & $0.18 + j\,0.18$ \\
     \hline
     \end{tabular}
 \end{table}
@@ -607,11 +607,12 @@ This new model implies the following changes:
         \cdots & \frac{s_k \alpha_i \sin \phi_i}{(s_k^2 - 2 s_k \alpha_i \cos \phi_i + \alpha_i^2)} & \cdots
     \end{bmatrix}^T.
 \end{gather}
-This model makes sure the complex poles are complex conjugates, while keeping the parameters real. However, constraining the poles to the left half-plane is still done by limiting $\Delta \theta$ with~(\ref{eq:delta_theta_limit}), which truncates the set of acceptable solutions in an artificial way.
+This model makes sure the complex poles are complex conjugates, while keeping the parameters real. However, constraining the poles to the left half-plane is still done by limiting $\Delta \theta$ with~(\ref{eq:delta_theta_limit}), which is no longer following the gradient. The amplitude and phase parametrization makes the interpolation harder: only $\phi_k$ should be limited, except if the amplitude changes sign. This could make the estimator differ from the optimal stable solution, which needs to be solved.
 
-Before adding a last layer of complexity to cure this, let's rapidly discuss the results of the SML and SRML estimators. The final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs}. The SRML estimate shown on Fig.~\ref{fig:FRF_SRML} is already a better match than Fig.~\ref{fig:FRF_SML}, especially visible in the phase subplot. This is surprising as the set of admissible solutions is reduced by imposing complex conjugate poles and zeros. 
+Before adding a last layer of complexity to cure this, let's rapidly discuss the results of the SML and SRML estimators. First visually, the SRML estimate shown on Fig.~\ref{fig:FRF_SRML} has a worse phase match than Fig.~\ref{fig:FRF_SML}, while both seem to follow well the amplitude. It can be precised that the ML model is used as reference instead of the measured points as it is known that the ML estimate is mathematically optimal. 
 
-The explanation is that the SML and SRML tend to have $\Delta\theta$ with different scales, which makes them converge to different minima, even with the same initial estimate. 
+
+More rigorously, the final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs} and it can be seen that the SRML performs a bit worse than the SML. This is logical as the SRML algorithm finds a minimal cost in a reduced solution set, which does not contain either the unstable solution of ML or the unreal solution of SML.
 
 \begin{table}
     \centering
@@ -620,10 +621,10 @@ The explanation is that the SML and SRML tend to have $\Delta\theta$ with differ
     \hline
     \textbf{Estimator} & \textbf{ML Cost} \\
     \hline
-    ML & $822$ \\
-    OML & $25\,345$ \\
-    SRML & $27\,107$ \\
-    SML & $35\,941$ \\
+    ML & $822.34$ \\
+    SML & $824.52$ \\
+    SRML & $827.36$ \\
+    OML & $827.36$ \\
     \hline
     \end{tabular}
     \label{tab:ML_costs}
@@ -665,7 +666,9 @@ This norm was however not negligible with the OML estimator so the LM was implem
     \frac{||\Delta\theta||}{||\theta||} \leq 10^{-12}
 \end{equation}
 
-The cost improve between the SRML estimator and this one is quite small, as shown in Table~\ref{tab:ML_costs}. Visually, the phase estimate is way worse going from Fig.~\ref{fig:FRF_SRML} to Fig.~\ref{fig:FRF_optimal_ML} but the overshoot at the oscillation frequency is lower, resulting in a slightly lower cost.
+There is no cost improve between this estimator and the SRML, as shown in Table~\ref{tab:ML_costs} and they are in fact finding the same exact solution. This is once again explained by thinking about the available solution set, which is exactly the same for both.
+
+This does not imply those are the same and they could differ slightly when poles approach the imaginary axis. As discussed in Sec.~\ref{sec:SRML}, the interpolation in case of constraints violation is badly handled and could therefore be suboptimal.
 
 \begin{figure}
     \centering
@@ -676,7 +679,7 @@ The cost improve between the SRML estimator and this one is quite small, as show
 
 \subsection{Conclusion on the Different ML Estimators}
 
-The optimal order of the ML estimators shown on Fig.~\ref{fig:optimal_order_ML} shows that the SRML estimate is still a decent choice of model as its ML cost is close to the one of the OML but it needs 2 parameters less.
+The optimal order of the ML estimators shown on Fig.~\ref{fig:optimal_order_ML} shows that the SRML and OML estimators have a larger order than the ML estimate. It is not a surprise and it even proves that the \textit{classical way} of stabilizing a system by symmetrizing unstable poles along the imaginary axis is not the optimal way, in which case the model order would have been the same for all the estimators.
 
 \begin{figure}
     \centering
@@ -703,8 +706,10 @@ A final note can be made about the uncertainty on the poles of the SRML and OML 
     \end{bmatrix} \notag 
 \end{gather}
 
-And finally, the resulting standard deviation of the poles are given in Table~\ref{tab:ML_pole_stddev}. It can be observed that the standard deviation of the complex conjugate poles (responsible for the oscillation) of the OML estimator is higher than with SRML. 
-It is yet another good point for the SRML model, which benefits from this lower uncertainty as it can better locate the resonance frequency of the systemS. It is indeed known to produce the peak observed in the FRF according to standard system theory.
+And finally, the resulting standard deviation of the poles are given in Table~\ref{tab:ML_pole_stddev}. It can be observed that there is a factor $2$ between the standard deviation of the SRML and the one of OML, and this only for the real part of their complex poles. 
+
+
+It is simply due to the squaring of $\alpha_k$ in~(\ref{eq:TF_OML}), which makes the link between pole position and parameter behave differently.
 
 \begin{table}
     \centering
@@ -712,28 +717,29 @@ It is yet another good point for the SRML model, which benefits from this lower 
     \label{tab:ML_pole_stddev}
     \begin{tabular}{l c c}
     \hline
-    \textbf{Estimator} & \textbf{Pole location} & \textbf{Std. deviation} \\
+    \textbf{Pole location} & \textbf{Std. deviation-SRML} & \textbf{Std. deviation-OML} \\
     \hline
-    SRML 
-    & $-12.1855 + j\,442.5608$ 
-    & $0.1416 + j\,0.1165$ \\
-
-    SRML 
-    & $-12.1855 - j\,442.5608$ 
-    & $0.1416 + j\,0.1165$ \\
-    \hline
-    OML 
-    & $-1153.1149$ 
-    & $22.7454$ \\
-
-    OML 
-    & $-14.1987 + j\,444.4559$ 
-    & $0.3500 + j\,0.1980$ \\
-
-    OML 
-    & $-14.1987 - j\,444.4559$ 
-    & $0.3500 + j\,0.1980$ \\
+    $-4250.10$ 
+        & $275.23$ 
+        & $275.23$ \\
+    $-140.62$ 
+        & $27.52$ 
+        & $27.52$ \\
+    $0 + j\,5770.62$ 
+        & $1.68 + j\,1.77$ 
+        & $3.35 + j\,1.77$ \\
+    $-22.17 + j\,445.12$ 
+        & $0.19 + j\,0.21$ 
+        & $0.37 + j\,0.21$ \\
+    $0 - j\,5770.62$ 
+        & $1.68 + j\,1.77$ 
+        & $3.35 + j\,1.77$ \\
+    $-22.17 - j\,445.12$ 
+        & $0.19 + j\,0.21$ 
+        & $0.37 + j\,0.21$ \\
     \hline
     \end{tabular}
 \end{table}
+
+
 

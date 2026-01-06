@@ -69,13 +69,13 @@ save("../results/parametricWorkspace.mat");
     subplot(211);
         legend('Non parametric', 'LLS', 'TLS', 'GTLS', 'BTLS', 'ML');
         xlabel('Frequency [Hz]');
-        ylabel('FRF Magnitude [dB]');
+        ylabel('|G_{est}| [dB]');
         xlim([f(1) f(end)]);
         grid on;
     subplot(212);
         %legend('Non parametric', 'LLS', 'TLS', 'GTLS', 'BTLS', 'ML');
         xlabel('Frequency [Hz]');
-        ylabel('FRF Phase [rad]');
+        ylabel('\angle G_{est} [rad]');
         xlim([f(1) f(end)]);
         grid on;
 
@@ -173,7 +173,7 @@ Na_optLLS = 35; Nb_optLLS = 32; % computed with large Na_max and Nb_max, hardcod
         plot(f, db(G2), 'Color', colors(7,:), 'LineStyle', '--', 'LineWidth', 1.5);
         legend('True ML', 'Stabilized poles');
         xlabel('Frequency [Hz]');
-        ylabel('FRF Magnitude [dB]');
+        ylabel('|G_{est}| [dB]');
         xlim([f(1) f(end)]);
         grid on;
 
@@ -184,7 +184,7 @@ Na_optLLS = 35; Nb_optLLS = 32; % computed with large Na_max and Nb_max, hardcod
         plot(f, unwrap(angle(G2)), 'Color', colors(7,:), 'LineStyle', '--', 'LineWidth', 1.5);
         %legend('Non parametric', 'LLS', 'TLS', 'GTLS', 'BTLS', 'ML');
         xlabel('Frequency [Hz]');
-        ylabel('FRF Phase [rad]');
+        ylabel('\angle G_{est} [rad]');
         xlim([f(1) f(end)]);
         grid on;
 
