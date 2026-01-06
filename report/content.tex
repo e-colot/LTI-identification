@@ -8,7 +8,7 @@ The device studied throughout this project is a linear system with a static nonl
 
 The objective will be to identify the linear part of the system and to have a measure of the nonlinearity and noise levels. The knowledge of~(\ref{eq:NL_feedback}) will not be used, except for a small parenthesis about odd and even nonlinearities.
 
-The measurement device (referred to as the \textit{PXI setup}) allows to send only multisines and their RMS value cannot exceed $1$~V. Its ADCs have a range that can be chosen and can sample at high frequencies ($> 1$~GHz).
+The measurement device (referred to as the \textit{PXI setup}) allows to send only multisines and their rms value cannot exceed $1$~V. Its ADCs have a range that can be chosen and can sample at high frequencies ($> 1$~GHz).
 
 This report deliberately focusses on the theoretical points and the results rather than the implementation because the Matlab™ scripts and the measured data are available on GitHub\footnote{https://github.com/e-colot/LTI-identification}. 
 
@@ -129,10 +129,10 @@ The excitation is a full multisine (excited up to $1.25$~kHz as explained in Sec
 \end{equation}
 \begin{equation}
     \hat{G}^{[m]} = \frac{1}{P} \sum_{p=1}^P \hat{G}^{[m, p]}
-    \label{eq:noiseVar_robust_method}
 \end{equation}
 \begin{equation}
     \hat{\sigma}^{2 [m]}_n = \frac{1}{P(P-1)} \sum_{p=1}^{P} \left| \hat{G}^{[m, p]} - \hat{G}^{[m]}\right|^2
+    \label{eq:noiseVar_robust_method}
 \end{equation}
 
 These noise variances on a single realization are then averaged across the realizations and divided by M because the averaging reduces the variance. This gives the total noise variance $\sigma^2_n$:
@@ -140,13 +140,13 @@ These noise variances on a single realization are then averaged across the reali
     \hat{\sigma}^2_n = \frac{1}{M^2} \sum_{m=1}^{M} \hat{\sigma}^{2 [m]}_n.
 \end{equation}
 
-The averaged FRF of a single realization $\hat{G}^{[m]}$ does not contain noise (at least in expected value and for zero-mean noise). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those therefore is due to nonlinear distortion only and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
+The averaged FRF of a single realization $\hat{G}^{[m]}$ does not contain noise (at least in expected value and for zero-mean noise). But between realizations, they have different nonlinear effects as the phases of the excitation signals have changed. The variance between those is therefore due to nonlinear distortion only and averaging it out gives a FRF estimate that is noiseless and purely linear, if $M$ and $P$ are large enough to be close to the expected value.
 \begin{gather}
     \hat{G}_{\text{BLA}} = \frac{1}{M}\sum_{m=1}^M\hat{G}^{[m]}\\
     \hat{\sigma}_{\text{dist}}^2 = \frac{1}{M(M-1)}\sum_{m=1}^M\left|\hat{G}^{[m]}-\hat{G}_{\text{BLA}}\right|^2
 \end{gather}
 
-The estimated FRF and the distortion estimates are shown on Fig.~\ref{fig:robust_method} with the total variance $\hat{\sigma}_\text{tot}^2$ being the sum of both
+The estimated FRF and the distortion estimates are shown on Fig.~\ref{fig:robust_method} with the total variance $\hat{\sigma}_\text{tot}^2$ being the sum of both.
 
 \begin{figure}
     \centering
@@ -172,7 +172,7 @@ The estimated FRF and the distortion estimates are shown on Fig.~\ref{fig:robust
 
 A linearized model of the system can be determined to approximate the DUT as an LTI. The best linear approximation, or BLA, is therefore computed as the "best fit". Because nonlinear distortions are dependent on the input signal, the BLA computed here is valid for excitation signals with a similar \textit{Riemann equivalent spectrum}.
 
-It is here mentioned but as there is no use of the deducted model, there is no interest in defining the category of excitations for which the model can be considered valid.
+It is here mentioned but as there is no use of the determined model, there is no interest in defining the category of excitations for which the model can be considered valid.
 
 
 
@@ -180,7 +180,7 @@ It is here mentioned but as there is no use of the deducted model, there is no i
 \subsection{Nonparametric Model}
 \label{sec:non_parametric_model}
 
-The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fact, an estimated BLA and it already comes with its uncertainty. Because of the successive averaging, it should be able to remove noise and nonlinear distortions which are zero-mean\footnote{It is only true in expected value so it can only be approached using a discrete number of periods and realizations}.
+The result of the robust method shown in Fig.~\ref{fig:robust_method} is, in fact, an estimated BLA and it already comes with its uncertainty. Because of the successive averaging, it should be able to remove noise and nonlinear distortions which are zero-mean\footnote{It is only true in expected value so it can only be approached using a discrete number of periods and realizations.}.
 
 
 
@@ -215,16 +215,17 @@ $S$ has been chosen to be a diagonal matrix with as elements the inverse of the 
 S = \operatorname{diag}\!\left( \frac{1}{\mathrm{rms}\bigl(H_{:,1}\bigr)}, \dots, \frac{1}{\mathrm{rms}\bigl(H_{:,n}\bigr)} \right).
 \end{equation}
 
-\paragraph{Use of the nonparametric estimate} All the estimators are relying on approaching the following, which arises from the definition of a transfer function. The key idea is to notice that because
+\paragraph{Use of the nonparametric estimate} All the estimators are relying on approaching~(\ref{eq:G_BLA_def}), which arises from the definition of a transfer function. The key idea is to notice that because
 \begin{equation}
     Y(k) = G_{\text{BLA}}(k) U(k),
+    \label{eq:G_BLA_def}
 \end{equation}
 a clever choice of $U$ simplifies the choice of $Y$, as
 \begin{equation}
     U(k) = 1 \quad \forall k \quad \Rightarrow \quad Y(k) = G_{\text{BLA}}(k).
 \end{equation}
 
-\paragraph{Forcing real valued parameters} A real system is described by real coefficients for a polynomial model~(\ref{eq:TF_parametric_model}) so $\theta$ must be real. The regressor must therefore be changed. $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$ as follows
+\paragraph{Forcing real valued parameters} A real system is described by real coefficients for a polynomial model~(\ref{eq:TF_parametric_model}) so $\theta$ must be real. The regressor must therefore be changed, meaning $y$ and $H$ are replaced by a concatenation of their real and imaginary parts called $y_{\text{re}}$ and $H_{\text{re}}$ as follows
 \begin{equation}
     y_{\text{re}} = \begin{bmatrix}
         \Re\left\{y\right\}\\
@@ -612,7 +613,7 @@ This model makes sure the complex poles are complex conjugates, while keeping th
 Before adding a last layer of complexity to cure this, let's rapidly discuss the results of the SML and SRML estimators. First visually, the SRML estimate shown on Fig.~\ref{fig:FRF_SRML} has a worse phase match than Fig.~\ref{fig:FRF_SML}, while both seem to follow well the amplitude. It can be precised that the ML model is used as reference instead of the measured points as it is known that the ML estimate is mathematically optimal. 
 
 
-More rigorously, the final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs} and it can be seen that the SRML performs a bit worse than the SML. This is logical as the SRML algorithm finds a minimal cost in a reduced solution set, which does not contain either the unstable solution of ML or the unreal solution of SML.
+More rigorously, the final ML cost of all the maximum likelihood estimators, computed with~(\ref{eq:ML_cost}), are shown in Table~\ref{tab:ML_costs} and it can be seen that the SRML performs a bit worse than the SML. This is expected as the SRML algorithm finds a minimal cost in a reduced solution set, which does not contain either the unstable solution of ML or the unreal solution of SML.
 
 \begin{table}
     \centering
